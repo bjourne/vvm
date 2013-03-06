@@ -4,14 +4,18 @@ mixin css(href)
     link(rel="stylesheet", href=href)
 
 !!! 5
-html(ng-app="vemvetmest")
+html(ng-app="vvm")
     head
         meta(charset="utf-8")
         mixin css("http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css")
+        mixin css("http://cdn.kendostatic.com/2011.3.1129/styles/kendo.common.min.css")
+        mixin css("http://cdn.kendostatic.com/2012.3.1315/styles/kendo.default.min.css")
         mixin js("http://code.jquery.com/jquery-1.8.2.js")
-        mixin js("http://ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular.min.js")          
+        mixin js("http://ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular.min.js")
+        mixin js("http://ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular-resource.min.js")          
         mixin js("http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js")
         mixin js("http://cdn.kendostatic.com/2012.3.1114/js/kendo.all.min.js")
+        mixin js("https://cdn.firebase.com/v0/firebase.js")          
         mixin js("js/out.js")
         title Vem vet mest
     body

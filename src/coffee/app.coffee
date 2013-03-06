@@ -1,4 +1,4 @@
-angular.module("vemvetmest", [])
+angular.module("vvm", ['vvmServices', 'vvmDirectives'])
     .config ["$routeProvider", ($routeProvider) ->
         $routeProvider
             .when "/scores"
