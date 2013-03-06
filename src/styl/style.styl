@@ -1,0 +1,65 @@
+$base = #34495e
+$firm = #1abc9c
+$inverse = #fff
+$share-color = #ecf0f5
+$pager-padding = 9px 18px 10px
+$pagination-color = rgb(215, 220, 224)
+
+table-control()
+    font-size 16px
+    font-weight bold
+    color $inverse
+    transition 0.25s
+    -webkit-transition 0.25s
+    height 39px
+    min-width 42px
+    line-height 36px
+    &.active
+        background-color rgb(44, 62, 80)
+    &:hover
+        background-color #4e6d8d
+        cursor pointer                      
+
+.table-pagination
+    width 100%
+    background-color $base      
+    border-radius  0px 0px 6px 6px      
+    overflow hidden
+    ul
+        margin-left 5px
+        li
+            table-control()
+            list-style-type none
+            float left          
+            display block
+            border-right 2px solid rgb(44, 62, 80)
+            text-align center
+
+table
+    border-radius  6px 6px 0px 0px
+    overflow hidden
+    width 100%
+    thead
+        background-color $base      
+        tr
+            th
+                padding-left 8px
+                table-control()
+                border-left 2px solid rgb(44, 62, 80)
+                text-align left
+                position relative
+                overflow hidden
+                .desc
+                    background url("../images/toggle.png") no-repeat right center
+                    position absolute
+                    right 0
+                    top 0
+                    width 42px
+                    height 100%
+            :first-child
+                border-left none
+    tbody
+        tr
+            td
+                background-color $share-color
+                padding 4px 8px 5px
