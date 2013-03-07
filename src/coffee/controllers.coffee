@@ -1,4 +1,6 @@
-ScoreListCtrl = ($scope, Score) ->
+API_BASE = 'http://desolate-meadow-9868.herokuapp.com/api'
+
+ScoreListCtrl = ($scope, $resource) ->
     $scope.config =
         columns: [
             {field: 'Name', title: 'Namn'},
@@ -6,7 +8,10 @@ ScoreListCtrl = ($scope, Score) ->
             {field: 'ElimScore', title: 'Utslagspoäng'},
             {field: 'FinalScore', title: 'Finalpoäng'},
         ]
-    $scope.listRef = new Firebase 'https://bjourne.firebaseio.com'
-    $scope.listRef.on 'child_added', (snap) ->
-        console.log 'added ' + snap            
+    @Score = $resource(
+        'http://desolate-meadow-9868.herokuapp.com/api/score/:scoreId',
+    )
+    @scores = @Score.get {scoreId: 4}
+     
+                
 

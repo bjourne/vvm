@@ -24,6 +24,10 @@ class Score(db.Model):
         CheckConstraint(
             'qual_score >= 0 and elim_score >= 0 and final_score >= 0'
         ),
+        CheckConstraint(
+            # Must be a weekday.
+            "date_part('dow', program_date) not in (6, 0)"
+        ),
         UniqueConstraint('name', 'program_date'),
         {}
     )
@@ -33,8 +37,9 @@ manager.create_api(Score, methods = ['GET', 'POST'])
 
 @app.before_first_request
 def setup_db():
-    db.drop_all()
-    db.create_all()
+    pass
+    # db.drop_all()
+    # db.create_all()
 
 @app.route('/')
 def hello():
