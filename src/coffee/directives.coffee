@@ -8,3 +8,4 @@ mod.directive 'kgrid', ->
     link: (scope, el, attrs) ->
         el.kendoGrid scope.config
 
+    
