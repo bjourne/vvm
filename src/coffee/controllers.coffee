@@ -26,7 +26,7 @@ ScoreListCtrl = ($scope, $resource) ->
                     url: (o) -> '/api/score/' + o.id
                     contentType: 'application/json; charset=utf-8'
                     dataType: 'json'
-                    type: 'DELETE'
+                    type: 'delete'
                 parameterMap: (data, op) ->
                     if op != 'read'
                         return kendo.stringify data
