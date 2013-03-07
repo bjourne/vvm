@@ -34,8 +34,18 @@ class Score(db.Model):
         {}
     )
 
+def post_post(data):
+    return {'objects' : [data]}
+
 manager = APIManager(app, flask_sqlalchemy_db = db)
-manager.create_api(Score, methods = ['GET', 'POST'])
+manager.create_api(
+    Score,
+    postprocessors = {
+        'POST' : [post_post],
+        'PATCH_SINGLE' : [post_post],
+        },
+    methods = ['DELETE', 'GET', 'POST', 'PATCH', 'PUT']
+    )
 
 @app.before_first_request
 def setup_db():

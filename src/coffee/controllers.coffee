@@ -6,28 +6,40 @@ ScoreListCtrl = ($scope, $resource) ->
             serverFiltering: true
             pageSize: 10
             type: 'json'
+            batch: false
             transport:
                 read:
                     url: '/api/score'
                     dataType: 'json'
+                    type: 'get'
                 create:
                     url: '/api/score'
+                    contentType: 'application/json; charset=utf-8'
                     dataType: 'json'
                     type: 'post'
-                parameterMap: (opts, op) ->
-                    console.log op
-                    console.log opts
-                    if op != 'read' and opts.models
-                        alert 'submitting data..'
+                update:
+                    url: (o) -> '/api/score/' + o.id
+                    contentType: 'application/json; charset=utf-8'
+                    dataType: 'json'
+                    type: 'patch'
+                destroy:
+                    url: (o) -> '/api/score/' + o.id
+                    contentType: 'application/json; charset=utf-8'
+                    dataType: 'json'
+                    type: 'DELETE'
+                parameterMap: (data, op) ->
+                    if op != 'read'
+                        return kendo.stringify data
             schema:
-                data: (resp) ->
-                    resp.objects
-                total: (resp) ->
-                    resp.num_results
+                data: (resp) -> resp.objects
+                total: (resp) -> resp.num_results
                 model:
                     id: 'id'
                     fields: 
-                        id: {type: 'number'}
+                        id:
+                            type: 'number'
+                            editable: false
+                            nullable: true
                         program_date: {type: 'date'}
                         name: {type: 'string'}
                         qual_score:
@@ -49,17 +61,17 @@ ScoreListCtrl = ($scope, $resource) ->
             {field: 'name', title: 'Namn'},
             {
                 field: 'qual_score',
-                title: 'Kvalpo‰ng',
+                title: 'Kvalpo√§ng',
                 format: '{0:#}'
             },
             {
                 field: 'elim_score',
-                title: 'Utslagspo‰ng',
+                title: 'Utslagspo√§ng',
                 format: '{0:#}'
             },
             {
                 field: 'final_score',
-                title: 'Finalpo‰ng',
+                title: 'Finalpo√§ng',
                 format: '{0:#}'
             },
             {command: ['edit', 'destroy'], title: '&nbsp;' }
