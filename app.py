@@ -22,7 +22,9 @@ class Score(db.Model):
     final_score = db.Column(db.Integer, nullable = False)
     __table_args__ = (
         CheckConstraint(
-            'qual_score >= 0 and elim_score >= 0 and final_score >= 0'
+            'qual_score between 0 and 100 and '
+            'elim_score between 0 and 100 and '
+            'final_score between 0 and 100'
         ),
         CheckConstraint(
             # Must be a weekday.
