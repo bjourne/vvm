@@ -1,3 +1,4 @@
 Flask==0.9
+Flask-SQLAlchemy
 gunicorn==0.16.1
 Flask-Restless
