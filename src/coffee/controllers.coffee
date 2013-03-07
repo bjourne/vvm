@@ -9,9 +9,9 @@ ScoreListCtrl = ($scope, $resource) ->
             {field: 'FinalScore', title: 'Finalpoäng'},
         ]
     @Score = $resource(
-        'http://desolate-meadow-9868.herokuapp.com/api/score/:scoreId',
+        '/api/score/:scoreId',
     )
-    @scores = @Score.get {scoreId: 4}
+    @scores = @Score.get {scoreId: 3}
      
                 
 

@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, redirect, url_for
 from flask.ext.restless import APIManager
 from flask.ext.sqlalchemy import SQLAlchemy
 from logging import INFO, basicConfig, getLogger
@@ -43,8 +43,7 @@ def setup_db():
 
 @app.route('/')
 def hello():
-    print Score.query.all()
-    return 'Hello World!'
+    return redirect(url_for('static', filename = 'index.html'))
 
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
