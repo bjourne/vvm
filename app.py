@@ -10,7 +10,7 @@ getLogger('sqlalchemy.engine').setLevel(INFO)
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = environ['DATABASE_URI']
+app.config['SQLALCHEMY_DATABASE_URI'] = environ['DATABASE_URL']
 db = SQLAlchemy(app)
 
 class Score(db.Model):
