@@ -1,4 +1,9 @@
-ERROR_TEMPLATE = kendo.template '<div class="k-widget k-tooltip k-tooltip-validation k-invalid-msg field-validation-error" style="margin: 0.5em; display: block; "><span class="k-icon k-warning"> </span>#=message#<div class="k-callout k-callout-n"></div></div>'
+ERROR_TEMPLATE = kendo.template '<div class="k-widget k-tooltip ' +
+    'k-tooltip-validation k-invalid-msg field-validation-error" ' +
+    'style="margin: 0.5em; display: block; >' +
+    '<span class="k-icon k-warning"></span>' +
+    '#=message#' +
+    '<div class="k-callout k-callout-n"></div></div>'
 
 parsePgError = (text) ->
     expressions = [
@@ -17,24 +22,44 @@ showMessage = (container, name ,errors) ->
         .replaceWith('hejsan!')
 
 ERROR_TO_MESSAGE = {
-    'IntegrityError:unique:uq/name+program_date' : 'Det finns redan ett resultat för den här spelaren för det här datumet',
-    'IntegrityError:check:len/name' : 'Spelarens namn måste bestå av 3 eller fler bokstäver.'
+    'IntegrityError:unique:uq/name+program_date' : [
+        'name',
+        'Det finns redan ett resultat fÃ¶r den hÃ¤r spelaren fÃ¶r det hÃ¤r datumet'
+    ],
+    'IntegrityError:check:name/len' : [
+        'name',
+        'Spelarens namn mÃ¥ste bestÃ¥ av 3 eller fler bokstÃ¤ver.'
+    ],
+    'IntegrityError:check:name/format' : [
+        'name',
+        'Spelarens namn fÃ¥r inte bÃ¶rja eller sluta med blanksteg.'
+    ],        
+    'IntegrityError:check:weekday' : [
+        'program_date',
+        'Programmets datum mÃ¥ste infalla pÃ¥ en vardag.'
+    ],
+    'IntegrityError:check:program_date/future' : [
+        'program_date',
+        'Det inmatade datumet fÃ¥r inte ligga i framtiden.'
+    ]        
 }            
 
 handleGridError = (err) ->
-    responseText = err.xhr.responseText
-    obj = JSON.parse responseText
+    text = err.xhr.responseText
+    try
+        obj = JSON.parse text
+    catch error
+        alert "Unexpected error occured: " + error + "\n" + text
+        return 
     err = obj.message
     console.log err
     [errId, data] = parsePgError err
-    message = ERROR_TO_MESSAGE[errId]
+    [field, message] = ERROR_TO_MESSAGE[errId]
 
-    console.log data
-    
     grid = $('#theGrid').data('kendoGrid')
 
     container = grid.editable.element
-    el = container.find('[data-container-for="name"]')
+    el = container.find '[data-container-for="' + field + '"]'
     el.append ERROR_TEMPLATE message: message
 
 ScoreListCtrl = ($scope, $resource) ->
@@ -69,6 +94,8 @@ ScoreListCtrl = ($scope, $resource) ->
                     type: 'delete'
                 parameterMap: (data, op) ->
                     if op != 'read'
+                        d = data.program_date
+                        data.program_date = new Date Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())
                         return kendo.stringify data
             schema:
                 data: (resp) -> resp.objects

@@ -28,11 +28,14 @@ class Score(db.Model):
         ),
         CheckConstraint(
             # Must be a weekday.
-            "date_part('dow', program_date) not in (6, 0)"
+            "date_part('dow', program_date) not in (6, 0)",
+            name = "weekday"
         ),
+        CheckConstraint('length(name) >= 3', name = 'name/len'),
+        CheckConstraint('trim(name) = name', name = 'name/format'),
         CheckConstraint(
-            'length(name) >= 3',
-            name = 'len/name'
+            'program_date <= current_date',
+            name = 'program_date/future'
         ),
         UniqueConstraint(
             'name',
@@ -57,9 +60,9 @@ manager.create_api(
 
 @app.before_first_request
 def setup_db():
-    pass
-    #db.drop_all()
-    #db.create_all()
+    #pass
+    db.drop_all()
+    db.create_all()
 
 @app.route('/')
 def hello():
