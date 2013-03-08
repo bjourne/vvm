@@ -18,29 +18,51 @@ class Score(db.Model):
     name = db.Column(db.Unicode, nullable = False)
     program_date = db.Column(db.Date, nullable = False)
     qual_score = db.Column(db.Integer, nullable = False)
+    qual_questions = db.Column(db.Integer, nullable = False)
     elim_score = db.Column(db.Integer, nullable = False)
+    elim_questions = db.Column(db.Integer, nullable = False)
     final_score = db.Column(db.Integer, nullable = False)
+    final_questions = db.Column(db.Integer, nullable = False)
     __table_args__ = (
-        CheckConstraint(
-            'qual_score between 0 and 100 and '
-            'elim_score between 0 and 100 and '
-            'final_score between 0 and 100'
-        ),
         CheckConstraint(
             # Must be a weekday.
             "date_part('dow', program_date) not in (6, 0)",
-            name = "weekday"
+            name = "program_date/weekday"
         ),
-        CheckConstraint('length(name) >= 3', name = 'name/len'),
-        CheckConstraint('trim(name) = name', name = 'name/format'),
         CheckConstraint(
             'program_date <= current_date',
             name = 'program_date/future'
         ),
+        CheckConstraint(
+            'qual_score between 0 and qual_questions',
+            name = 'qual_score/oob'
+        ),
+        CheckConstraint(
+            'elim_score between 0 and elim_questions',
+            name = 'elim_score/oob'
+        ),
+        CheckConstraint(
+            'final_score between 0 and final_questions',
+            name = 'final_score/oob'
+        ),
+        CheckConstraint(
+            'qual_questions between 1 and 100',
+            name = 'qual_questions/oob'
+        ),
+        CheckConstraint(
+            'elim_questions between 1 and 100',
+            name = 'elim_questions/oob'
+        ),
+        CheckConstraint(
+            'final_questions between 1 and 100',
+            name = 'final_questions/oob'
+        ),
+        CheckConstraint('length(name) >= 3', name = 'name/len'),
+        CheckConstraint('trim(name) = name', name = 'name/format'),
         UniqueConstraint(
             'name',
             'program_date',
-            name = 'uq/name+program_date'
+            name = 'name/uq-program_date'
         ),
         {}
     )

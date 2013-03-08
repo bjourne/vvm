@@ -1,5 +1,3 @@
-"use strict"
-
 angular.element(document).ready ->
     kendo.culture 'sv-SE'
 
