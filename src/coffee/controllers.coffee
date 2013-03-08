@@ -67,10 +67,13 @@ createScoreColumn = (title, scoreField, questionsField) ->
         appendScoreInput container, scoreField
         $('<span> rätt av </span>').appendTo(container)
         appendScoreInput container, questionsField
-    template = "#= " + scoreField + " + ' rätt av ' + " + questionsField + " #"
     {        
         title: title,
-        template: template,
+        template: (t) ->
+            score = t[scoreField]
+            questions = t[questionsField]
+            ratio = kendo.toString score / questions, 'p0'
+            score + " rätt av " + questions + " (" + ratio + ")"
         editor: editor,
         field: scoreField
     }        
