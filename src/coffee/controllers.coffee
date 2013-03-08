@@ -1,21 +1,41 @@
 ERROR_TEMPLATE = kendo.template '<div class="k-widget k-tooltip k-tooltip-validation k-invalid-msg field-validation-error" style="margin: 0.5em; display: block; "><span class="k-icon k-warning"> </span>#=message#<div class="k-callout k-callout-n"></div></div>'
-    
+
+parsePgError = (text) ->
+    expressions = [
+        '\\((?<error>[^\)]+)\\) duplicate key value violates (?<type>unique) constraint "(?<name>[^"]+)"\\s+' +
+        'DETAIL:\\s+Key \\((?P<key>[^\)]+)\\)',
+        '\\((?<error>[^\)]+)\\) new row for relation "(?P<rel>\\w+)" violates (?P<type>check) constraint "(?<name>[^"]+)"'
+        ]
+    results = (XRegExp.exec text, (XRegExp e) for e in expressions)
+    result = _.find results
+    key = [result.error, result.type, result.name].join(":")
+    [key, result]
+
 showMessage = (container, name ,errors) ->
     container
         .find('[data-val-msg-for=' + name + ']')
         .replaceWith('hejsan!')
 
+ERROR_TO_MESSAGE = {
+    'IntegrityError:unique:uq/name+program_date' : 'Det finns redan ett resultat för den här spelaren för det här datumet',
+    'IntegrityError:check:len/name' : 'Spelarens namn måste bestå av 3 eller fler bokstäver.'
+}            
+
 handleGridError = (err) ->
     responseText = err.xhr.responseText
     obj = JSON.parse responseText
     err = obj.message
+    console.log err
+    [errId, data] = parsePgError err
+    message = ERROR_TO_MESSAGE[errId]
+
+    console.log data
+    
     grid = $('#theGrid').data('kendoGrid')
 
     container = grid.editable.element
     el = container.find('[data-container-for="name"]')
-    console.log el
-
-    el.append ERROR_TEMPLATE({message: err})
+    el.append ERROR_TEMPLATE message: message
 
 ScoreListCtrl = ($scope, $resource) ->
     $scope.config =
