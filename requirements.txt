@@ -1,5 +1,5 @@
 Flask==0.9
 Flask-SQLAlchemy
 gunicorn==0.16.1
-Flask-Restless
+git+git://github.com/bjourne/flask-restless.git
 psycopg2

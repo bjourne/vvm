@@ -30,6 +30,7 @@ class Score(db.Model):
             # Must be a weekday.
             "date_part('dow', program_date) not in (6, 0)"
         ),
+        CheckConstraint('length(name) >= 3'),
         UniqueConstraint('name', 'program_date'),
         {}
     )
