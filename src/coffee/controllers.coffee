@@ -1,3 +1,22 @@
+ERROR_TEMPLATE = kendo.template '<div class="k-widget k-tooltip k-tooltip-validation k-invalid-msg field-validation-error" style="margin: 0.5em; display: block; "><span class="k-icon k-warning"> </span>#=message#<div class="k-callout k-callout-n"></div></div>'
+    
+showMessage = (container, name ,errors) ->
+    container
+        .find('[data-val-msg-for=' + name + ']')
+        .replaceWith('hejsan!')
+
+handleGridError = (err) ->
+    responseText = err.xhr.responseText
+    obj = JSON.parse responseText
+    err = obj.message
+    grid = $('#theGrid').data('kendoGrid')
+
+    container = grid.editable.element
+    el = container.find('[data-container-for="name"]')
+    console.log el
+
+    el.append ERROR_TEMPLATE({message: err})
+
 ScoreListCtrl = ($scope, $resource) ->
     $scope.config =
         dataSource:
@@ -7,6 +26,7 @@ ScoreListCtrl = ($scope, $resource) ->
             pageSize: 10
             type: 'json'
             batch: false
+            error: handleGridError
             transport:
                 read:
                     url: '/api/score'
