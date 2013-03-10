@@ -22,4 +22,10 @@ html(ng-app="vvm")
         mixin js("js/out.js")
         title Vem vet mest
     body
-        div(ng-view)
+        .container
+            .row(ng-show="!loggedIn")
+                .span12
+                    a(href="#") Logga in
+            .row
+                .span12
+                    div(ng-view)

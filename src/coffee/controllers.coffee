@@ -6,7 +6,7 @@ ERROR_TEMPLATE = kendo.template '<div class="k-widget k-tooltip ' +
     '<div class="k-callout k-callout-n"></div></div>'
 
 ERROR_TO_MESSAGE = {
-    'unique:name/uq-program_date': \
+    'unique:user_id/uq-program_date': \
         'Det finns redan ett resultat för den här spelaren för det här datumet',
     'check:name/len' : \
         'Spelarens namn måste bestå av 3 eller fler bokstäver.',
@@ -27,8 +27,8 @@ ERROR_TO_MESSAGE = {
     'check:elim_score/oob' : \
         'Utslagspoängen får inte vara högre än frågeantalet.',
     'check:elim_questions/oob' : \
-        'Antalet utslagsfrågor måste vara mellan 1 och 100.'                
-}            
+        'Antalet utslagsfrågor måste vara mellan 1 och 100.'
+}
 
 ##############################################################################
 
@@ -45,7 +45,7 @@ parsePgError = (text) ->
     result = _.find results
     if not result
         null
-    else        
+    else
         key = [result.type, result.name].join(":")
         [key, result]
 
@@ -67,7 +67,7 @@ createScoreColumn = (title, scoreField, questionsField) ->
         appendScoreInput container, scoreField
         $('<span> rätt av </span>').appendTo(container)
         appendScoreInput container, questionsField
-    {        
+    {
         title: title,
         template: (t) ->
             score = t[scoreField]
@@ -76,7 +76,7 @@ createScoreColumn = (title, scoreField, questionsField) ->
             score + " rätt av " + questions + " (" + ratio + ")"
         editor: editor,
         field: scoreField
-    }        
+    }
 
 handleGridError = (err) ->
     text = err.xhr.responseText
@@ -84,7 +84,7 @@ handleGridError = (err) ->
         obj = JSON.parse text
     catch error
         alert "Unexpected error occured: " + error + "\n" + text
-        return 
+        return
     message = obj.message
     t = parsePgError message
     if not t
@@ -97,16 +97,42 @@ handleGridError = (err) ->
         alert "No message found for: " + key
         return
 
+    gridId = @options.errorContainer
     field = t[1].name.split('/')[0]
-    grid = $('#theGrid').data('kendoGrid')
+    grid = $('#' + gridId).data('kendoGrid')
+    if not grid
+        alert 'No grid with id ' + gridId + ' found.'
+        return
     container = grid.editable.element
     el = container.find('[data-bind="value:' + field + '"]').closest('td')
     if not el.length
-        alert "No element found for field: " + field
+        alert 'No element found for field: ' + field
         return
+    $('.field-validation-error').remove()
     el.append ERROR_TEMPLATE message: message
 
+handleDropDownError = (err) ->
+    alert 'I dont know what to do.'
+
 ScoreListCtrl = ($scope, $resource) ->
+    $scope.gridId = 'theGrid'
+    $scope.loggedIn = true
+    $scope.users = new kendo.data.DataSource
+        type: 'json'
+        error: handleDropDownError
+        transport:
+            read:
+                url: '/api/user'
+                dataType: 'json'
+        schema:
+            data: (resp) -> resp.objects
+            total: (resp) -> resp.num_results
+
+    $scope.ddConfig =
+        dataTextField: 'email'
+        dataValueField: 'id'
+        dataSource: $scope.users
+
     $scope.config =
         dataSource:
             serverPaging: true
@@ -116,6 +142,8 @@ ScoreListCtrl = ($scope, $resource) ->
             type: 'json'
             batch: false
             error: handleGridError
+            # My extension
+            errorContainer: $scope.gridId
             transport:
                 read:
                     url: '/api/score'
@@ -145,13 +173,13 @@ ScoreListCtrl = ($scope, $resource) ->
                 total: (resp) -> resp.num_results
                 model:
                     id: 'id'
-                    fields: 
+                    fields:
                         id:
                             type: 'number'
                             editable: false
                             nullable: true
                         program_date: {type: 'date'}
-                        name: {type: 'string'}
+                        user_id: {type: 'number'}
                         qual_score:
                             type: 'number'
                             validation:
@@ -161,7 +189,7 @@ ScoreListCtrl = ($scope, $resource) ->
                             type: 'number'
                             validation:
                                 min: 0
-                                max: 100                                
+                                max: 100
                         elim_score: {type: 'number'},
                         elim_questions: {type: 'number'}
                         final_score: {type: 'number'}
@@ -180,8 +208,9 @@ ScoreListCtrl = ($scope, $resource) ->
                 format: '{0:yyyy-MM-dd}'
             },
             {
-                field: 'name',
-                title: 'Namn'
+                field: 'user_id',
+                title: 'Spelare',
+                dsForeignKey: $scope.ddConfig
             },
             createScoreColumn('Kvalificeringen', 'qual_score', 'qual_questions'),
             createScoreColumn('Utslagningen', 'elim_score', 'elim_questions'),
