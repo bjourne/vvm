@@ -129,9 +129,9 @@ manager.create_api(
 
 @app.before_first_request
 def setup_db():
-    pass
-    #db.drop_all()
-    #db.create_all()
+    #pass
+    db.drop_all()
+    db.create_all()
 
 @app.route('/')
 def root():
