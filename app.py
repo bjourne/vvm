@@ -1,5 +1,12 @@
-from flask import Flask, redirect, url_for
-from flask.ext.login import LoginManager
+# -*- coding: utf-8 -*-
+from flask import Flask, jsonify, redirect, request, url_for
+from flask.ext.login import (
+    LoginManager,
+    login_required,
+    login_user,
+    logout_user,
+    current_user
+)
 from flask.ext.openid import OpenID
 from flask.ext.restless import APIManager
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -129,13 +136,38 @@ manager.create_api(
 
 @app.before_first_request
 def setup_db():
-    #pass
-    db.drop_all()
-    db.create_all()
+    pass
+    #db.drop_all()
+    #db.create_all()
 
 @app.route('/')
 def root():
     return redirect(url_for('static', filename = 'index.html'))
+
+@app.route('/login', methods = ['POST'])
+def login():
+    form = request.form
+    email = form.get('email', '')
+    password = form.get('password', '')
+    user = User.query.filter_by(email = email).first()
+    if not user:
+        return jsonify(error = 'user-invalid')
+    if not login_user(user, remember = True):
+        return jsonify(error = 'user-inactive')
+    return jsonify(success = True)
+
+@app.route('/logout', methods = ['POST'])
+@login_required
+def logout():
+    logout_user()
+    return jsonify(success = True, email = 'okänd')
+
+@app.route('/whoami')
+def whoami():
+    id = current_user.get_id()
+    isAnon = id is None
+    email = getattr(current_user, 'email', 'okänd')
+    return jsonify(isAnon = isAnon, email = email)
 
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.

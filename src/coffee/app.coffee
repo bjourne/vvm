@@ -10,5 +10,3 @@ app = angular.module('vvm', ['vvmServices', 'vvmDirectives'])
             .otherwise redirectTo: '/scores'
         ]
 
-app.run ($rootScope) ->
-    $rootScope.loggedIn = false

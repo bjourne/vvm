@@ -1,4 +1,43 @@
-p Vem vet mest...
-kdropdown(config="ddConfig",dropdownid="theDropDown")
+#modal.modal.hide.fade(
+    tabindex="-1",
+    role="dialog",
+    aria-labelledby="modalLabel",
+    aria-hidden="true"
+    )
+    .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") x
+        h3#modalLabel Logga in
+    .modal-body
+        .form-horizontal
+            .control-group
+                label.control-label(for="email") Epost
+                .controls
+                    input#email(
+                        type="text",
+                        placeholder="Epost",
+                        data-ng-model="loginEmail"
+                    )
+            .control-group
+                label.control-label(for="password") Lösenord
+                .controls
+                    input#password(
+                        type="password",
+                        placeholder="Lösenord",
+                        data-ng-model="loginPassword"
+                    )
+
+    .modal-footer
+        button.btn(data-dismiss="modal", aria-hidden="true") Stäng
+        button.btn.btn-primary(ng-click="login()") Logga in
 kgrid(config="config",gridid="gridId")
+hr
+a.btn.btn-primary(
+    href="#modal",
+    role="button",
+    data-toggle="modal",
+    data-ng-show="User.isAnon()"
+    ) Logga in
+a.btn(ng-click="logout()",data-ng-hide="User.isAnon()") Logga ut
+p Hejsan {{User.getEmail()}}.
+
 

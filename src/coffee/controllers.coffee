@@ -114,9 +114,15 @@ handleGridError = (err) ->
 handleDropDownError = (err) ->
     alert 'I dont know what to do.'
 
-ScoreListCtrl = ($scope, $resource) ->
+ScoreListCtrl = ($scope, User) ->
+    $scope.User = User
+    $scope.login = ->
+        $('#modal').modal('hide')
+        User.login $scope.loginEmail, $scope.loginPassword, $scope
+    $scope.logout = -> User.logout $scope
+    User.init $scope
+
     $scope.gridId = 'theGrid'
-    $scope.loggedIn = true
     $scope.users = new kendo.data.DataSource
         type: 'json'
         error: handleDropDownError

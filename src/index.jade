@@ -1,5 +1,5 @@
 mixin js(src)
-    script(type="text/javascript", src=src)    
+    script(type="text/javascript", src=src)
 mixin css(href)
     link(rel="stylesheet", href=href)
 
@@ -10,12 +10,12 @@ html(ng-app="vvm")
         mixin css("http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css")
         mixin css("http://cdn.kendostatic.com/2012.3.1315/styles/kendo.common.min.css")
         mixin css("http://cdn.kendostatic.com/2012.3.1315/styles/kendo.default.min.css")
-        mixin css("/static/css/style.css")          
+        mixin css("/static/css/style.css")
         mixin js("http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js")
         mixin js("http://cdnjs.cloudflare.com/ajax/libs/xregexp/2.0.0/xregexp-min.js")
-        mixin js("http://cdnjs.cloudflare.com/ajax/libs/lodash.js/1.0.1/lodash.min.js")          
+        mixin js("http://cdnjs.cloudflare.com/ajax/libs/lodash.js/1.0.1/lodash.min.js")
         mixin js("http://ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular.min.js")
-        mixin js("http://ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular-resource.min.js")          
+        mixin js("http://ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular-resource.min.js")
         mixin js("http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js")
         mixin js("http://cdn.kendostatic.com/2012.3.1114/js/kendo.all.min.js")
         mixin js("http://cdn.kendostatic.com/2012.3.1114/js/cultures/kendo.culture.sv-SE.min.js")
@@ -23,9 +23,8 @@ html(ng-app="vvm")
         title Vem vet mest
     body
         .container
-            .row(ng-show="!loggedIn")
-                .span12
-                    a(href="#") Logga in
             .row
+                .span12
+                    h1 Vem vet mest!
                 .span12
                     div(ng-view)
