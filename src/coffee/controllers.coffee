@@ -122,7 +122,6 @@ ScoreListCtrl = ($scope, User) ->
     $scope.logout = -> User.logout $scope
     User.init $scope
 
-    $scope.gridId = 'theGrid'
     $scope.users = new kendo.data.DataSource
         type: 'json'
         error: handleDropDownError
@@ -139,6 +138,7 @@ ScoreListCtrl = ($scope, User) ->
         dataValueField: 'id'
         dataSource: $scope.users
 
+    $scope.gridId = 'theGrid'
     $scope.config =
         dataSource:
             serverPaging: true
@@ -200,7 +200,16 @@ ScoreListCtrl = ($scope, User) ->
                         elim_questions: {type: 'number'}
                         final_score: {type: 'number'}
                         final_questions: {type: 'number'}
-        toolbar: [{name: 'create', text: 'Lägg in poäng'}]
+        toolbar: [
+            {name: 'create', text: 'Lägg in poäng'}
+        ]
+        dataBound: ->
+            console.log $scope.gridId
+            console.log $('#' + $scope.gridId).data('kendoGrid')
+            grid = this
+            $('#theGrid tbody tr .k-grid-edit').each ->
+                di = grid.dataItem $(this).closest('tr')
+                console.log di.user_id + ' ' + $scope.User.getId()
         editable:
             update: true
             destroy: true

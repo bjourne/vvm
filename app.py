@@ -7,8 +7,7 @@ from flask.ext.login import (
     logout_user,
     current_user
 )
-from flask.ext.openid import OpenID
-from flask.ext.restless import APIManager
+from flask.ext.restless import APIManager, ProcessingException
 from flask.ext.sqlalchemy import SQLAlchemy
 from logging import INFO, basicConfig, getLogger
 from os import environ
@@ -109,27 +108,61 @@ lm.setup_app(app)
 def load_user(id):
     return User.query.get(int(id))
 
-oid = OpenID(app, '/tmp')
-
+def get_current_user_id():
+    return int(current_user.get_id() or 0)
 
 ##############################################################################
 
 manager = APIManager(app, flask_sqlalchemy_db = db)
 
+def score_auth(data):
+    posted_user_id = int(data.get('user_id', 0))
+    if get_current_user_id() != posted_user_id:
+        raise ProcessingException('Not authorized: Cant change owner', 401)
+    return data
+
+def score_check_owner(instid):
+    try:
+        instid = int(instid)
+    except ValueError:
+        return
+    score = Score.query.get(instid)
+    if not score:
+        return
+    if get_current_user_id() != score.user_id:
+        raise ProcessingException('Not authorized: Not the owner', 401)
+    
+def score_pre_patch(instid, data):
+    score_check_owner(instid)
+    return score_auth(data)
+
+def score_pre_post(data):
+    return score_auth(data)
+
+def score_pre_delete(instid):
+    score_check_owner(instid)
+
 def post_post(data):
     return {'objects' : [data]}
+
 manager.create_api(
     Score,
+    preprocessors = {
+        'DELETE' : [score_pre_delete],
+        'PATCH_SINGLE' : [score_pre_patch],
+        'POST' : [score_pre_post]
+    },     
     postprocessors = {
-        'POST' : [post_post],
         'PATCH_SINGLE' : [post_post],
+        'POST' : [post_post]
     },
-    methods = ['DELETE', 'GET', 'PATCH', 'POST', 'PUT']
+    methods = [
+        'DELETE', 'GET', 'PATCH', 'POST', 'PUT']
 )
 
 manager.create_api(
     User,
-    methods = ['GET', 'PATCH', 'POST']
+    methods = ['GET', 'POST']
 )
 
 ##############################################################################
@@ -160,14 +193,14 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return jsonify(success = True, email = 'okänd')
+    return jsonify(success = True, email = 'okÃ¤nd')
 
 @app.route('/whoami')
 def whoami():
     id = current_user.get_id()
     isAnon = id is None
-    email = getattr(current_user, 'email', 'okänd')
-    return jsonify(isAnon = isAnon, email = email)
+    email = getattr(current_user, 'email', 'okÃ¤nd')
+    return jsonify(isAnon = isAnon, email = email, id = id)
 
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
