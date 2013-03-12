@@ -1,4 +1,4 @@
-mod = angular.module('vvmServices', ['ngResource'])
+mod = angular.module('vvmServices', [])
 
 # http://vyazici.blogspot.se/2012/09/angularjs-authentication-service.html
 mod.factory 'User', ->
@@ -11,23 +11,24 @@ mod.factory 'User', ->
     getEmail: => @email
     init: (scope) =>
         $.get '/whoami', {}, (data) =>
-            scope.$apply =>
-                console.log data
-                @email = data.email
-                @id = parseInt data.id
-                @isAnon = data.isAnon
-    login: (email, password, scope) =>
+            @email = data.email
+            @id = parseInt data.id
+            @isAnon = data.isAnon
+            scope.$apply()
+    login: (email, password, scope, cb) =>
         $.post '/login', {email: email, password: password}, (data) =>
-            if data.success
+            if data.email
                 @isAnon = false
-                @email = email
-                @id = 33
-            scope.$apply -> null
-    logout: (scope) =>
+                @email = data.email
+                @id = data.id
+            cb()
+            scope.$apply()
+    logout: (scope, cb) =>
         if @email != 'okänd'
             $.post '/logout', {}, (data) =>
                 @email = data.email
                 @isAnon = true
                 @id = 0
-                scope.$apply -> null
+                cb()
+                scope.$apply()
 

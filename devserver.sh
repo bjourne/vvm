@@ -1,6 +1,8 @@
 #!/bin/bash
 set -eu
 
+
+cp -v src/js/* static/js/
 mkdir -p static/css
 
 coffee -wbj out.js -o static/js src/coffee &

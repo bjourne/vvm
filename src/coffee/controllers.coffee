@@ -111,20 +111,28 @@ handleGridError = (err) ->
     $('.field-validation-error').remove()
     el.append ERROR_TEMPLATE message: message
 
-handleDropDownError = (err) ->
-    alert 'I dont know what to do.'
+refreshGrid = (gridId) ->
+    $('#' + gridId).data('kendoGrid').dataSource.read()
 
 ScoreListCtrl = ($scope, User) ->
     $scope.User = User
+    $scope.showLoginDialog = false
+    $scope.openDialog = ->
+        $scope.showLoginDialog = true
+    $scope.closeDialog = ->
+        $scope.showLoginDialog = false
+
     $scope.login = ->
-        $('#modal').modal('hide')
-        User.login $scope.loginEmail, $scope.loginPassword, $scope
-    $scope.logout = -> User.logout $scope
+        $scope.closeDialog()
+        User.login $scope.loginEmail, $scope.loginPassword, $scope, ->
+            refreshGrid $scope.gridId
+    $scope.logout = ->
+        User.logout $scope, ->
+            refreshGrid $scope.gridId
     User.init $scope
 
     $scope.users = new kendo.data.DataSource
         type: 'json'
-        error: handleDropDownError
         transport:
             read:
                 url: '/api/user'
@@ -201,15 +209,17 @@ ScoreListCtrl = ($scope, User) ->
                         final_score: {type: 'number'}
                         final_questions: {type: 'number'}
         toolbar: [
+            # Disable when anon
             {name: 'create', text: 'Lägg in poäng'}
         ]
         dataBound: ->
-            console.log $scope.gridId
-            console.log $('#' + $scope.gridId).data('kendoGrid')
             grid = this
-            $('#theGrid tbody tr .k-grid-edit').each ->
-                di = grid.dataItem $(this).closest('tr')
-                console.log di.user_id + ' ' + $scope.User.getId()
+            userId = $scope.User.getId()
+            $('#' + $scope.gridId + ' tbody tr .k-button')
+                .each ->
+                    $el = $(this)
+                    di = grid.dataItem $el.closest('tr')
+                    $el.toggle di.user_id == userId
         editable:
             update: true
             destroy: true
@@ -223,9 +233,12 @@ ScoreListCtrl = ($scope, User) ->
                 format: '{0:yyyy-MM-dd}'
             },
             {
-                field: 'user_id',
-                title: 'Spelare',
+                field: 'user_id'
+                title: 'Spelare'
                 dsForeignKey: $scope.ddConfig
+                editor: (container, opts) ->
+                    email = $scope.User.getEmail()
+                    $('<span>' + email + '</span>').appendTo(container)
             },
             createScoreColumn('Kvalificeringen', 'qual_score', 'qual_questions'),
             createScoreColumn('Utslagningen', 'elim_score', 'elim_questions'),

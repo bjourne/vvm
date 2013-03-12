@@ -1,7 +1,9 @@
 angular.element(document).ready ->
     kendo.culture 'sv-SE'
 
-app = angular.module('vvm', ['vvmServices', 'vvmDirectives'])
+deps = ['vvmServices', 'vvmDirectives', 'ui', 'ui.bootstrap']
+
+app = angular.module('vvm', deps)
     .config ['$routeProvider', ($routeProvider) ->
         $routeProvider
             .when '/scores'

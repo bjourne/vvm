@@ -14,8 +14,8 @@ from os import environ
 from os.path import join
 from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 
-basicConfig()
-getLogger('sqlalchemy.engine').setLevel(INFO)
+# basicConfig()
+# getLogger('sqlalchemy.engine').setLevel(INFO)
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -131,7 +131,7 @@ def score_check_owner(instid):
         return
     if get_current_user_id() != score.user_id:
         raise ProcessingException('Not authorized: Not the owner', 401)
-    
+
 def score_pre_patch(instid, data):
     score_check_owner(instid)
     return score_auth(data)
@@ -151,7 +151,7 @@ manager.create_api(
         'DELETE' : [score_pre_delete],
         'PATCH_SINGLE' : [score_pre_patch],
         'POST' : [score_pre_post]
-    },     
+    },
     postprocessors = {
         'PATCH_SINGLE' : [post_post],
         'POST' : [post_post]
@@ -187,7 +187,7 @@ def login():
         return jsonify(error = 'user-invalid')
     if not login_user(user, remember = True):
         return jsonify(error = 'user-inactive')
-    return jsonify(success = True)
+    return jsonify(id = user.id, email = user.email)
 
 @app.route('/logout', methods = ['POST'])
 @login_required

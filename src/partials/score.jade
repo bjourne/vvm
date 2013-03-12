@@ -1,11 +1,6 @@
-#modal.modal.hide.fade(
-    tabindex="-1",
-    role="dialog",
-    aria-labelledby="modalLabel",
-    aria-hidden="true"
-    )
+div(modal="showLoginDialog", close="closeDialog()")
     .modal-header
-        button.close(type="button", data-dismiss="modal", aria-hidden="true") x
+        button.close(ng-click="closeDialog()") x
         h3#modalLabel Logga in
     .modal-body
         .form-horizontal
@@ -15,7 +10,9 @@
                     input#email(
                         type="text",
                         placeholder="Epost",
-                        data-ng-model="loginEmail"
+                        data-ng-model="loginEmail",
+                        autofocus="autofocus",
+                        ui-keypress='{enter: login}'
                     )
             .control-group
                 label.control-label(for="password") Lösenord
@@ -23,21 +20,18 @@
                     input#password(
                         type="password",
                         placeholder="Lösenord",
-                        data-ng-model="loginPassword"
+                        data-ng-model="loginPassword",
+                        ui-keypress='{enter: login}'
                     )
-
     .modal-footer
-        button.btn(data-dismiss="modal", aria-hidden="true") Stäng
+        button.btn(ng-click="closeDialog()") Stäng
         button.btn.btn-primary(ng-click="login()") Logga in
+
 kgrid(config="config",gridid="gridId")
-hr
-a.btn.btn-primary(
-    href="#modal",
-    role="button",
-    data-toggle="modal",
-    data-ng-show="User.isAnon()"
-    ) Logga in
+a.btn.btn-primary(ng-click="openDialog()", data-ng-show="User.isAnon()") Logga in
 a.btn(ng-click="logout()",data-ng-hide="User.isAnon()") Logga ut
 p Hejsan {{User.getEmail()}}.
+
+
 
 

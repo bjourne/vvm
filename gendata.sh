@@ -1,6 +1,6 @@
 #!/bin/bash
 
-HOST="http://localhost:5000"
+HOST="http://warm-coast-4785.herokuapp.com/"
 
 http -v POST $HOST/api/user email=bjourne@gmail.com
 http -v POST $HOST/api/user email=frodoe@gmail.com
