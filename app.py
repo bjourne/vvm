@@ -165,6 +165,8 @@ def google_authorized(resp):
         headers = headers
     )
     data = r.json
+    if callable(data):
+        data = data()
     session['oauth'] = (token, 'empty')
     setup_user('google', data['id'], data['name'])
     return redirect('/')
