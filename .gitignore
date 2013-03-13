@@ -1,3 +1,4 @@
 *.pyc
 bld
 static
+config.py

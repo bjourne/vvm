@@ -6,3 +6,4 @@ gunicorn>=0.16.1
 psycopg2
 Flask-Login
 Flask-OAuth
+requests>=0.14.1
