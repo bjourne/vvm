@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, jsonify, redirect, request, url_for
+from config import SITE_CONFIG
+from flask import Flask, jsonify, redirect, request, session, url_for
+from flask_oauth import OAuth
 from flask.ext.login import (
     LoginManager,
     login_required,
@@ -10,23 +12,24 @@ from flask.ext.login import (
 from flask.ext.restless import APIManager, ProcessingException
 from flask.ext.sqlalchemy import SQLAlchemy
 from logging import INFO, basicConfig, getLogger
+from requests import get as req_get
 from os import environ
-from os.path import join
 from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 
-# basicConfig()
-# getLogger('sqlalchemy.engine').setLevel(INFO)
-
 app = Flask(__name__)
-app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = environ['DATABASE_URL']
-app.config['SECRET_KEY'] = 'hejsan'
+app.config.update(SITE_CONFIG)
+
+##############################################################################
 
 db = SQLAlchemy(app)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key = True)
-    email = db.Column(db.String(120), unique = True)
     scores = db.relationship('Score', lazy = 'dynamic')
+    oauth_provider = db.Column(db.String(255))
+    oauth_id = db.Column(db.String(255))
+    oauth_token = db.Column(db.String(255))
+    oauth_secret = db.Column(db.String(255))
+    display_name = db.Column(db.String(255))
 
     def is_authenticated(self):
         return True
@@ -41,12 +44,7 @@ class User(db.Model):
         return unicode(self.id)
 
     def __repr__(self):
-        return '<User %r>' % (self.email)
-
-    __table_args__ = (
-        CheckConstraint("email like '%@%'", name = 'email/format'),
-        CheckConstraint('trim(email) = email', name = 'email/spaces')
-    )
+        return '<User %s/%s>' % (self.oauth_provider, self.oauth_id)
 
 class Score(db.Model):
     id = db.Column(db.Integer, primary_key = True)
@@ -101,7 +99,6 @@ class Score(db.Model):
     )
 
 ##############################################################################
-
 lm = LoginManager()
 lm.setup_app(app)
 @lm.user_loader
@@ -112,14 +109,144 @@ def get_current_user_id():
     return int(current_user.get_id() or 0)
 
 ##############################################################################
+def setup_user(oauth_provider, oauth_id, display_name):
+    key = dict(oauth_id = oauth_id, oauth_provider = oauth_provider)
+    user = User.query.filter_by(**key).first()
+    if not user:
+        user = User(**key)
+        db.session.add(user)
+    user.display_name = display_name
+    user.oauth_token, user.oauth_secret = session['oauth']
+    db.session.commit()
+    login_user(user, remember = True)
+    # Why do i need this?
+    del session['oauth']
+
+@app.route('/auth/<provider>/login')
+def oauth_login(provider):
+    callback = url_for('%s_authorized' % provider, _external = True)
+    resp = remote_apps[provider].authorize(callback = callback)
+    return resp
+
+oauth = OAuth()
+
+def bitbucket_authorized(resp):
+    if not resp:
+        raise Error('Denied!')
+    session['oauth'] = resp['oauth_token'], resp['oauth_token_secret']
+    user = remote_apps['bitbucket'].get('user').data['user']
+    account_name = user['username']
+    display_name = user.get('display_name') or account_name
+    setup_user('bitbucket', account_name, display_name)
+    return redirect('/')
+
+def github_authorized(resp):
+    if not resp:
+        raise Error('Denied!')
+    session['oauth'] = resp['access_token'], 'empty'
+    data = remote_apps['github'].get('/user').data
+    display_name = data.get('name') or data['login']
+    setup_user('github', str(data['id']), display_name)
+    return redirect('/')
+
+def facebook_authorized(resp):
+    if resp is None:
+        raise Error('Denied!')
+    session['oauth'] = resp['access_token'], 'empty'
+    data = remote_apps['facebook'].get('/me').data
+    setup_user('facebook', data['id'], data['name'])
+    return redirect('/')
+
+def google_authorized(resp):
+    token = resp['access_token']
+    headers = {'Authorization': 'OAuth ' + token}
+    r = req_get(
+        'https://www.googleapis.com/oauth2/v1/userinfo?alt=json',
+        headers = headers
+    )
+    data = r.json
+    session['oauth'] = (token, 'empty')
+    setup_user('google', data['id'], data['name'])
+    return redirect('/')
+
+def twitter_authorized(resp):
+    if not resp:
+        raise Error('Denied!')
+    session['oauth'] = (resp['oauth_token'], resp['oauth_token_secret'])
+    setup_user('twitter', resp['screen_name'], resp['screen_name'])
+    return redirect('/')
+
+oauth_configs = dict(
+    bitbucket = dict(
+        base_url = 'https://api.bitbucket.org/1.0/',
+        request_token_url = 'https://bitbucket.org/!api/1.0/oauth/request_token',
+        access_token_url = 'https://bitbucket.org/!api/1.0/oauth/access_token',
+        authorize_url = 'https://bitbucket.org/!api/1.0/oauth/authenticate',
+        authorization_handler = bitbucket_authorized
+        ),
+    github = dict(
+        base_url = 'https://api.github.com/',
+        request_token_url = None,
+        access_token_url = 'https://github.com/login/oauth/access_token',
+        authorize_url = 'https://github.com/login/oauth/authorize',
+        request_token_params = {'scope' : 'user:email'},
+        authorization_handler = github_authorized
+        ),
+    twitter = dict(
+        base_url = 'https://api.twitter.com/1/',
+        request_token_url = 'https://api.twitter.com/oauth/request_token',
+        access_token_url = 'https://api.twitter.com/oauth/access_token',
+        authorize_url = 'https://api.twitter.com/oauth/authenticate',
+        authorization_handler = twitter_authorized
+        ),
+    google = dict(
+        base_url = 'https://www.google.com/accounts/',
+        authorize_url = 'https://accounts.google.com/o/oauth2/auth',
+        request_token_url = None,
+        request_token_params = {
+            'scope': 'https://www.googleapis.com/auth/userinfo.profile',
+            'response_type': 'code'
+            },
+        access_token_url = 'https://accounts.google.com/o/oauth2/token',
+        access_token_method = 'POST',
+        access_token_params = {'grant_type': 'authorization_code'},
+        authorization_handler = google_authorized
+        ),
+    facebook = dict(
+        base_url = 'https://graph.facebook.com/',
+        request_token_url = None,
+        access_token_url='/oauth/access_token',
+        authorize_url = 'https://www.facebook.com/dialog/oauth',
+        request_token_params = {'scope': 'email'},
+        authorization_handler = facebook_authorized
+        )
+    )
+
+def tokengetter():
+    token = session.get('oauth')
+    if current_user.is_authenticated():
+        token = current_user.oauth_token, current_user.oauth_secret
+    return token
+
+remote_apps = {}
+for provider, config in oauth_configs.items():
+    config.update(app.config['OAUTH_LOGINS'][provider])
+    handler = config.pop('authorization_handler')
+    remote_app = oauth.remote_app(provider, **config)
+    remote_app.tokengetter(tokengetter)
+    handler = remote_app.authorized_handler(handler)
+    app.add_url_rule('/auth/' + provider + '/authorized', view_func = handler)
+    remote_apps[provider] = remote_app
+
+@app.route('/logout', methods = ['POST'])
+@login_required
+def logout():
+    logout_user()
+    return jsonify(success = True)
+
+##############################################################################
 
 manager = APIManager(app, flask_sqlalchemy_db = db)
-
-def score_auth(data):
-    posted_user_id = int(data.get('user_id', 0))
-    if get_current_user_id() != posted_user_id:
-        raise ProcessingException('Not authorized: Cant change owner', 401)
-    return data
 
 def score_check_owner(instid):
     try:
@@ -134,10 +261,12 @@ def score_check_owner(instid):
 
 def score_pre_patch(instid, data):
     score_check_owner(instid)
-    return score_auth(data)
+    data['user_id'] = get_current_user_id()
+    return data
 
 def score_pre_post(data):
-    return score_auth(data)
+    data['user_id'] = get_current_user_id()
+    return data
 
 def score_pre_delete(instid):
     score_check_owner(instid)
@@ -160,10 +289,7 @@ manager.create_api(
         'DELETE', 'GET', 'PATCH', 'POST', 'PUT']
 )
 
-manager.create_api(
-    User,
-    methods = ['GET', 'POST']
-)
+manager.create_api(User, methods = ['GET'])
 
 ##############################################################################
 
@@ -177,30 +303,15 @@ def setup_db():
 def root():
     return redirect(url_for('static', filename = 'index.html'))
 
-@app.route('/login', methods = ['POST'])
-def login():
-    form = request.form
-    email = form.get('email', '')
-    password = form.get('password', '')
-    user = User.query.filter_by(email = email).first()
-    if not user:
-        return jsonify(error = 'user-invalid')
-    if not login_user(user, remember = True):
-        return jsonify(error = 'user-inactive')
-    return jsonify(id = user.id, email = user.email)
-
-@app.route('/logout', methods = ['POST'])
-@login_required
-def logout():
-    logout_user()
-    return jsonify(success = True, email = 'okÃ¤nd')
-
 @app.route('/whoami')
 def whoami():
     id = current_user.get_id()
-    isAnon = id is None
-    email = getattr(current_user, 'email', 'okÃ¤nd')
-    return jsonify(isAnon = isAnon, email = email, id = id)
+    return jsonify(
+        is_anon = id is None,
+        display_name = getattr(current_user, 'display_name', None),
+        oauth_provider = getattr(current_user, 'oauth_provider', None),
+        id = id
+    )
 
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.

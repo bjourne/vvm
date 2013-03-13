@@ -2,8 +2,8 @@
 # datasources.
 #
 # Nice recursive spaghetti code for handling asyncronous js. :)
-dataSourceToValues = (ds, textField, valueField) ->
-    {text: d[textField], value: d[valueField]} for d in ds.data()
+dataSourceToValues = (ds, textFunc, valueFunc) ->
+    {text: textFunc(d), value: valueFunc(d)} for d in ds.data()
 
 preloadColumns = (columns, cb) ->
     if columns.length == 0
@@ -12,10 +12,16 @@ preloadColumns = (columns, cb) ->
         col = columns[0]
         fkDef = col.dsForeignKey
         textField = fkDef.dataTextField
+        textFunc = textField
+        if typeof textField == 'string'
+            textFunc = (e) -> e[textField]
         valueField = fkDef.dataValueField
+        valueFunc = valueField
+        if typeof valueField == 'string'
+            valueFunc = (e) -> e[valueField]
         ds = fkDef.dataSource
         ds.fetch (x) ->
-            col.values = dataSourceToValues ds, textField, valueField
+            col.values = dataSourceToValues ds, textFunc, valueFunc
             preloadColumns _.rest(columns), cb
 
 preloadForeignKeys = (config, cb) ->

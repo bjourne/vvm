@@ -115,6 +115,11 @@ refreshGrid = (gridId) ->
     $('#' + gridId).data('kendoGrid').dataSource.read()
 
 ScoreListCtrl = ($scope, User) ->
+    $scope.formatUser = (user) ->
+        if not user.display_name
+            'okänd'
+        else
+            user.display_name + ' (' + user.oauth_provider + ')'
     $scope.User = User
     $scope.showLoginDialog = false
     $scope.openDialog = ->
@@ -142,7 +147,7 @@ ScoreListCtrl = ($scope, User) ->
             total: (resp) -> resp.num_results
 
     $scope.ddConfig =
-        dataTextField: 'email'
+        dataTextField: $scope.formatUser
         dataValueField: 'id'
         dataSource: $scope.users
 
@@ -214,7 +219,7 @@ ScoreListCtrl = ($scope, User) ->
         ]
         dataBound: ->
             grid = this
-            userId = $scope.User.getId()
+            userId = $scope.User.getUser().id
             $('#' + $scope.gridId + ' tbody tr .k-button')
                 .each ->
                     $el = $(this)
@@ -237,8 +242,8 @@ ScoreListCtrl = ($scope, User) ->
                 title: 'Spelare'
                 dsForeignKey: $scope.ddConfig
                 editor: (container, opts) ->
-                    email = $scope.User.getEmail()
-                    $('<span>' + email + '</span>').appendTo(container)
+                    text = $scope.formatUser($scope.User.getUser())
+                    $('<span>' + text + '</span>').appendTo(container)
             },
             createScoreColumn('Kvalificeringen', 'qual_score', 'qual_questions'),
             createScoreColumn('Utslagningen', 'elim_score', 'elim_questions'),

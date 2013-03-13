@@ -1,36 +1,12 @@
-div(modal="showLoginDialog", close="closeDialog()")
-    .modal-header
-        button.close(ng-click="closeDialog()") x
-        h3#modalLabel Logga in
-    .modal-body
-        .form-horizontal
-            .control-group
-                label.control-label(for="email") Epost
-                .controls
-                    input#email(
-                        type="text",
-                        placeholder="Epost",
-                        data-ng-model="loginEmail",
-                        autofocus="autofocus",
-                        ui-keypress='{enter: login}'
-                    )
-            .control-group
-                label.control-label(for="password") Lösenord
-                .controls
-                    input#password(
-                        type="password",
-                        placeholder="Lösenord",
-                        data-ng-model="loginPassword",
-                        ui-keypress='{enter: login}'
-                    )
-    .modal-footer
-        button.btn(ng-click="closeDialog()") Stäng
-        button.btn.btn-primary(ng-click="login()") Logga in
-
 kgrid(config="config",gridid="gridId")
-a.btn.btn-primary(ng-click="openDialog()", data-ng-show="User.isAnon()") Logga in
-a.btn(ng-click="logout()",data-ng-hide="User.isAnon()") Logga ut
-p Hejsan {{User.getEmail()}}.
+p
+a.btn(data-ng-show="User.getUser().is_anon", href="/auth/twitter/login") Logga in med Twitter
+a.btn(data-ng-show="User.getUser().is_anon", href="/auth/google/login") Logga in med Google+
+a.btn(data-ng-show="User.getUser().is_anon", href="/auth/facebook/login") Logga in med Facebook
+a.btn(data-ng-show="User.getUser().is_anon", href="/auth/github/login") Logga in med Github
+a.btn(data-ng-show="User.getUser().is_anon", href="/auth/bitbucket/login") Logga in med Bitbucket
+a.btn(ng-click="logout()",data-ng-hide="User.getUser().is_anon") Logga ut
+p Hejsan {{formatUser(User.getUser())}}
 
 
 
