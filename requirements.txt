@@ -6,7 +6,7 @@ gunicorn>=0.16.1
 # httplib2 misses certs
 -e git+http://github.com/bjourne/python-oauth2.git@disable-ssl-check#egg=oauth2
 # Because unicode strings with encodings
--e git+http://github.com/bjourne/python-oauth2.git#egg=python-oauth2
+-e git+http://github.com/bjourne/flask-oauth.git#egg=flask-oauth
 psycopg2
 Flask-Login
 Flask-OAuth
