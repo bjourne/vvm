@@ -176,6 +176,9 @@ def twitter_authorized(resp):
     setup_user('twitter', resp['screen_name'], resp['screen_name'])
     return redirect('/')
 
+def soundcloud_authorized(resp):
+    pass
+
 oauth_configs = dict(
     bitbucket = dict(
         base_url = 'https://api.bitbucket.org/1.0/',
@@ -219,6 +222,13 @@ oauth_configs = dict(
         authorize_url = 'https://www.facebook.com/dialog/oauth',
         request_token_params = {'scope': 'email'},
         authorization_handler = facebook_authorized
+        ),
+    soundcloud = dict(
+        base_url = 'https://api.soundcloud.com',
+        request_token_url = 'unknown',
+        access_token_url = 'unknown',
+        authorize_url = 'https://soundcloud.com/connect',
+        authorization_handler = soundcloud_authorized
         )
     )
 

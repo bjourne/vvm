@@ -2,6 +2,7 @@ Flask>=0.9
 Flask-SQLAlchemy
 gunicorn>=0.16.1
 -e git+http://github.com/bjourne/flask-restless.git#egg=restless
+# Needed because ssl bug in httplib2
 -e git+http://github.com/bjourne/python-oauth2.git@disable-ssl-check#egg=oauth2
 psycopg2
 Flask-Login
