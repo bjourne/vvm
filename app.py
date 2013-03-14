@@ -139,8 +139,7 @@ def soundcloud_authorized(resp):
     data = remote_apps['soundcloud'].get('/me', headers = headers).data
     id = data.xpath('id/text()')[0]
     name = data.xpath('full-name/text()')[0]
-    setup_user('soundcloud', id, name)
-    return redirect('/')
+    return setup_user('soundcloud', id, name)
 
 def bitbucket_authorized(resp):
     if not resp:
@@ -149,8 +148,7 @@ def bitbucket_authorized(resp):
     user = remote_apps['bitbucket'].get('user').data['user']
     account_name = user['username']
     display_name = user.get('display_name') or account_name
-    setup_user('bitbucket', account_name, display_name)
-    return redirect('/')
+    return setup_user('bitbucket', account_name, display_name)
 
 def github_authorized(resp):
     if not resp:
@@ -158,8 +156,7 @@ def github_authorized(resp):
     session['oauth'] = resp['access_token'], 'empty'
     data = remote_apps['github'].get('/user').data
     display_name = data.get('name') or data['login']
-    setup_user('github', str(data['id']), display_name)
-    return redirect('/')
+    return setup_user('github', str(data['id']), display_name)
 
 def facebook_authorized(resp):
     if not resp:
@@ -236,7 +233,7 @@ oauth_configs = dict(
         authorize_url = 'https://api.soundcloud.com/connect',
         access_token_url = 'https://api.soundcloud.com/oauth2/token',
         request_token_url = None,
-        request_token_params = {'response_type' : 'code'},
+        request_token_params = {'response_type' : 'code', 'display' : 'popup'},
         access_token_params = {'grant_type' : 'authorization_code'},
         access_token_method = 'POST',
         authorization_handler = soundcloud_authorized
