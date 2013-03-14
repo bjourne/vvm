@@ -5,7 +5,7 @@ a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('google')") Lo
 a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('facebook')") Logga in med Facebook
 a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('github')") Logga in med Github
 a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('bitbucket')") Logga in med Bitbucket
-a.btn(data-ng-show="User.getUser().is_anon", ng-click="loginSoundCloud()") Logga in med Soundcloud
+a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('soundcloud')") Logga in med Soundcloud
 a.btn(ng-click="logout()",data-ng-hide="User.getUser().is_anon") Logga ut
 p Hejsan {{formatUser(User.getUser())}}
 
