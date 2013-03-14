@@ -144,7 +144,7 @@ def soundcloud_authorized(resp):
 
 def bitbucket_authorized(resp):
     if not resp:
-        raise Error('Denied!')
+        raise Exception('Denied!')
     session['oauth'] = resp['oauth_token'], resp['oauth_token_secret']
     user = remote_apps['bitbucket'].get('user').data['user']
     account_name = user['username']
@@ -154,7 +154,7 @@ def bitbucket_authorized(resp):
 
 def github_authorized(resp):
     if not resp:
-        raise Error('Denied!')
+        raise Exception('Denied!')
     session['oauth'] = resp['access_token'], 'empty'
     data = remote_apps['github'].get('/user').data
     display_name = data.get('name') or data['login']
@@ -162,8 +162,8 @@ def github_authorized(resp):
     return redirect('/')
 
 def facebook_authorized(resp):
-    if resp is None:
-        raise Error('Denied!')
+    if not resp:
+        raise Exception('Denied!')
     session['oauth'] = resp['access_token'], 'empty'
     data = remote_apps['facebook'].get('/me').data
     return setup_user('facebook', data['id'], data['name'])
@@ -183,7 +183,7 @@ def google_authorized(resp):
 
 def twitter_authorized(resp):
     if not resp:
-        raise Error('Denied!')
+        raise Exception('Denied!')
     session['oauth'] = (resp['oauth_token'], resp['oauth_token_secret'])
     return setup_user('twitter', resp['screen_name'], resp['screen_name'])
 
