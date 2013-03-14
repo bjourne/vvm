@@ -121,6 +121,8 @@ def setup_user(oauth_provider, oauth_id, display_name):
     login_user(user, remember = True)
     # Why do i need this?
     del session['oauth']
+    return redirect('/static/auth_recv.html')
+
 
 @app.route('/auth/<provider>/login')
 def oauth_login(provider):
@@ -129,6 +131,16 @@ def oauth_login(provider):
     return resp
 
 oauth = OAuth()
+
+def soundcloud_authorized(resp):
+    token = resp['access_token']
+    session['oauth'] = token, 'empty'
+    headers = {'Authorization': 'OAuth ' + token}
+    data = remote_apps['soundcloud'].get('/me', headers = headers).data
+    id = data.xpath('id/text()')[0]
+    name = data.xpath('full-name/text()')[0]
+    setup_user('soundcloud', id, name)
+    return redirect('/')
 
 def bitbucket_authorized(resp):
     if not resp:
@@ -154,8 +166,7 @@ def facebook_authorized(resp):
         raise Error('Denied!')
     session['oauth'] = resp['access_token'], 'empty'
     data = remote_apps['facebook'].get('/me').data
-    setup_user('facebook', data['id'], data['name'])
-    return redirect('/')
+    return setup_user('facebook', data['id'], data['name'])
 
 def google_authorized(resp):
     token = resp['access_token']
@@ -168,15 +179,13 @@ def google_authorized(resp):
     if callable(data):
         data = data()
     session['oauth'] = (token, 'empty')
-    setup_user('google', data['id'], data['name'])
-    return redirect('/')
+    return setup_user('google', data['id'], data['name'])
 
 def twitter_authorized(resp):
     if not resp:
         raise Error('Denied!')
     session['oauth'] = (resp['oauth_token'], resp['oauth_token_secret'])
-    setup_user('twitter', resp['screen_name'], resp['screen_name'])
-    return redirect('/')
+    return setup_user('twitter', resp['screen_name'], resp['screen_name'])
 
 oauth_configs = dict(
     bitbucket = dict(
@@ -221,7 +230,17 @@ oauth_configs = dict(
         authorize_url = 'https://www.facebook.com/dialog/oauth',
         request_token_params = {'scope': 'email'},
         authorization_handler = facebook_authorized
-        )
+        ),
+    soundcloud = dict(
+        base_url = 'https://api.soundcloud.com',
+        authorize_url = 'https://api.soundcloud.com/connect',
+        access_token_url = 'https://api.soundcloud.com/oauth2/token',
+        request_token_url = None,
+        request_token_params = {'response_type' : 'code'},
+        access_token_params = {'grant_type' : 'authorization_code'},
+        access_token_method = 'POST',
+        authorization_handler = soundcloud_authorized
+        ),
     )
 
 def tokengetter():
