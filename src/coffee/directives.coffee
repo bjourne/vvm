@@ -35,7 +35,7 @@ preloadForeignKeys = (config, cb) ->
             e.model = _.merge m, defaults
         cb()
 
-mod = angular.module 'vvmDirectives', []
+mod = angular.module 'vvm.directives', []
 mod.directive 'kgrid', ->
     restrict: 'E'
     replace: true

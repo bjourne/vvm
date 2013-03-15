@@ -1,11 +1,11 @@
 kgrid(config="config",gridid="gridId")
 p
-a.btn(data-ng-show="User.getUser().is_anon", href="/auth/twitter/login") Logga in med Twitter
-a.btn(data-ng-show="User.getUser().is_anon", href="/auth/google/login") Logga in med Google+
-a.btn(data-ng-show="User.getUser().is_anon", href="/auth/facebook/login") Logga in med Facebook
-a.btn(data-ng-show="User.getUser().is_anon", href="/auth/github/login") Logga in med Github
-a.btn(data-ng-show="User.getUser().is_anon", href="/auth/bitbucket/login") Logga in med Bitbucket
-a.btn(data-ng-show="User.getUser().is_anon", href="/auth/soundcloud/login") Logga in med SoundCloud
+a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('twitter')") Logga in med Twitter
+a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('google')") Logga in med Google+
+a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('facebook')") Logga in med Facebook
+a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('github')") Logga in med Github
+a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('bitbucket')") Logga in med Bitbucket
+a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('soundcloud')") Logga in med Soundcloud
 a.btn(ng-click="logout()",data-ng-hide="User.getUser().is_anon") Logga ut
 p Hejsan {{formatUser(User.getUser())}}
 

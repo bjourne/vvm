@@ -115,27 +115,22 @@ refreshGrid = (gridId) ->
     $('#' + gridId).data('kendoGrid').dataSource.read()
 
 ScoreListCtrl = ($scope, User) ->
+    $scope.startLogin = (provider) ->
+        url = '/auth/' + provider + '/login'
+        window.open url, null, 'height=600,width=400'
+    $scope.completeLogin = ->
+        User.init $scope, ->
+            console.log 'user inited again...'
+            refreshGrid $scope.gridId
+
     $scope.formatUser = (user) ->
         if not user.display_name
             'okänd'
         else
             user.display_name + ' (' + user.oauth_provider + ')'
     $scope.User = User
-    $scope.showLoginDialog = false
-    $scope.openDialog = ->
-        $scope.showLoginDialog = true
-    $scope.closeDialog = ->
-        $scope.showLoginDialog = false
 
-    $scope.login = ->
-        $scope.closeDialog()
-        User.login $scope.loginEmail, $scope.loginPassword, $scope, ->
-            refreshGrid $scope.gridId
-    $scope.logout = ->
-        User.logout $scope, ->
-            refreshGrid $scope.gridId
     User.init $scope
-
     $scope.users = new kendo.data.DataSource
         type: 'json'
         transport:
@@ -145,6 +140,9 @@ ScoreListCtrl = ($scope, User) ->
         schema:
             data: (resp) -> resp.objects
             total: (resp) -> resp.num_results
+    $scope.logout = ->
+        User.logout $scope, ->
+            refreshGrid $scope.gridId
 
     $scope.ddConfig =
         dataTextField: $scope.formatUser

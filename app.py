@@ -121,6 +121,8 @@ def setup_user(oauth_provider, oauth_id, display_name):
     login_user(user, remember = True)
     # Why do i need this?
     del session['oauth']
+    return redirect('/static/auth_recv.html')
+
 
 @app.route('/auth/<provider>/login')
 def oauth_login(provider):
@@ -130,32 +132,38 @@ def oauth_login(provider):
 
 oauth = OAuth()
 
+def soundcloud_authorized(resp):
+    token = resp['access_token']
+    session['oauth'] = token, 'empty'
+    headers = {'Authorization': 'OAuth ' + token}
+    data = remote_apps['soundcloud'].get('/me', headers = headers).data
+    id = data.xpath('id/text()')[0]
+    name = data.xpath('full-name/text()')[0]
+    return setup_user('soundcloud', id, name)
+
 def bitbucket_authorized(resp):
     if not resp:
-        raise Error('Denied!')
+        raise Exception('Denied!')
     session['oauth'] = resp['oauth_token'], resp['oauth_token_secret']
     user = remote_apps['bitbucket'].get('user').data['user']
     account_name = user['username']
     display_name = user.get('display_name') or account_name
-    setup_user('bitbucket', account_name, display_name)
-    return redirect('/')
+    return setup_user('bitbucket', account_name, display_name)
 
 def github_authorized(resp):
     if not resp:
-        raise Error('Denied!')
+        raise Exception('Denied!')
     session['oauth'] = resp['access_token'], 'empty'
     data = remote_apps['github'].get('/user').data
     display_name = data.get('name') or data['login']
-    setup_user('github', str(data['id']), display_name)
-    return redirect('/')
+    return setup_user('github', str(data['id']), display_name)
 
 def facebook_authorized(resp):
-    if resp is None:
-        raise Error('Denied!')
+    if not resp:
+        raise Exception('Denied!')
     session['oauth'] = resp['access_token'], 'empty'
     data = remote_apps['facebook'].get('/me').data
-    setup_user('facebook', data['id'], data['name'])
-    return redirect('/')
+    return setup_user('facebook', data['id'], data['name'])
 
 def google_authorized(resp):
     token = resp['access_token']
@@ -165,16 +173,16 @@ def google_authorized(resp):
         headers = headers
     )
     data = r.json
+    if callable(data):
+        data = data()
     session['oauth'] = (token, 'empty')
-    setup_user('google', data['id'], data['name'])
-    return redirect('/')
+    return setup_user('google', data['id'], data['name'])
 
 def twitter_authorized(resp):
     if not resp:
-        raise Error('Denied!')
+        raise Exception('Denied!')
     session['oauth'] = (resp['oauth_token'], resp['oauth_token_secret'])
-    setup_user('twitter', resp['screen_name'], resp['screen_name'])
-    return redirect('/')
+    return setup_user('twitter', resp['screen_name'], resp['screen_name'])
 
 def soundcloud_authorized(resp):
     pass
@@ -225,11 +233,14 @@ oauth_configs = dict(
         ),
     soundcloud = dict(
         base_url = 'https://api.soundcloud.com',
-        request_token_url = 'unknown',
-        access_token_url = 'unknown',
-        authorize_url = 'https://soundcloud.com/connect',
+        authorize_url = 'https://api.soundcloud.com/connect',
+        access_token_url = 'https://api.soundcloud.com/oauth2/token',
+        request_token_url = None,
+        request_token_params = {'response_type' : 'code', 'display' : 'popup'},
+        access_token_params = {'grant_type' : 'authorization_code'},
+        access_token_method = 'POST',
         authorization_handler = soundcloud_authorized
-        )
+        ),
     )
 
 def tokengetter():
