@@ -11,6 +11,7 @@ from flask.ext.login import (
 )
 from flask.ext.restless import APIManager, ProcessingException
 from flask.ext.sqlalchemy import SQLAlchemy
+from functools import wraps
 from logging import INFO, basicConfig, getLogger
 from requests import get as req_get
 from os import environ
@@ -109,8 +110,11 @@ def get_current_user_id():
     return int(current_user.get_id() or 0)
 
 ##############################################################################
-def setup_user(oauth_provider, oauth_id, display_name):
-    key = dict(oauth_id = oauth_id, oauth_provider = oauth_provider)
+def setup_user(oauth_provider, oauth_id, display_name, image_url):
+    key = dict(
+        oauth_id = unicode(oauth_id),
+        oauth_provider = oauth_provider
+        )
     user = User.query.filter_by(**key).first()
     if not user:
         user = User(**key)
@@ -123,49 +127,60 @@ def setup_user(oauth_provider, oauth_id, display_name):
     del session['oauth']
     return redirect('/static/auth_recv.html')
 
-
 @app.route('/auth/<provider>/login')
 def oauth_login(provider):
-    callback = url_for('%s_authorized' % provider, _external = True)
-    resp = remote_apps[provider].authorize(callback = callback)
-    return resp
+    callback = url_for('%s_user_info' % provider, _external = True)
+    return remote_apps[provider].authorize(callback = callback)
+
+def tokengetter():
+    token = session.get('oauth')
+    if current_user.is_authenticated():
+        token = current_user.oauth_token, current_user.oauth_secret
+    return token
+
+def create_oauth_authorized_handler(provider, func):
+    @wraps(func)
+    def wrapper(resp):
+        if not resp:
+            raise Exception('Unknown failure!')
+        if 'oauth_token' in resp:
+            # Oauth 1.0 (twitter)
+            oauth = resp['oauth_token'], resp['oauth_token_secret']
+        else:
+            oauth = resp['access_token'], 'empty'
+        session['oauth'] = oauth
+        remote_app = remote_apps[provider]
+        id, name, image_url = func(remote_app, resp)
+        return setup_user(provider, id, name, image_url)
+    return wrapper
+
+@app.route('/logout', methods = ['POST'])
+@login_required
+def logout():
+    logout_user()
+    return jsonify(success = True)
 
 oauth = OAuth()
 
-def soundcloud_authorized(resp):
+def soundcloud_user_info(remote_app, resp):
     token = resp['access_token']
-    session['oauth'] = token, 'empty'
     headers = {'Authorization': 'OAuth ' + token}
-    data = remote_apps['soundcloud'].get('/me', headers = headers).data
-    id = data.xpath('id/text()')[0]
-    name = data.xpath('full-name/text()')[0]
-    return setup_user('soundcloud', id, name)
+    data = remote_app.get('/me.json', headers = headers).data
+    return data['id'], data['full_name'], 'coming'
 
-def bitbucket_authorized(resp):
-    if not resp:
-        raise Exception('Denied!')
-    session['oauth'] = resp['oauth_token'], resp['oauth_token_secret']
-    user = remote_apps['bitbucket'].get('user').data['user']
-    account_name = user['username']
-    display_name = user.get('display_name') or account_name
-    return setup_user('bitbucket', account_name, display_name)
+def bitbucket_user_info(remote_app, resp):
+    user = remote_app.get('user').data['user']
+    return user['username'], user.get('display_name') or account_name, 'soon'
 
-def github_authorized(resp):
-    if not resp:
-        raise Exception('Denied!')
-    session['oauth'] = resp['access_token'], 'empty'
-    data = remote_apps['github'].get('/user').data
-    display_name = data.get('name') or data['login']
-    return setup_user('github', str(data['id']), display_name)
+def github_user_info(remote_app, resp):
+    data = remote_app.get('/user').data
+    return data['id'], data.get('name') or data['login'], 'soon'
 
-def facebook_authorized(resp):
-    if not resp:
-        raise Exception('Denied!')
-    session['oauth'] = resp['access_token'], 'empty'
-    data = remote_apps['facebook'].get('/me').data
-    return setup_user('facebook', data['id'], data['name'])
+def facebook_user_info(remote_app, resp):
+    data = remote_app.get('/me').data
+    return data['id'], data['name'], 'soon'
 
-def google_authorized(resp):
+def google_user_info(remote_app, resp):
     token = resp['access_token']
     headers = {'Authorization': 'OAuth ' + token}
     r = req_get(
@@ -175,37 +190,33 @@ def google_authorized(resp):
     data = r.json
     if callable(data):
         data = data()
-    session['oauth'] = (token, 'empty')
-    return setup_user('google', data['id'], data['name'])
+    return data['id'], data['name'], 'soon'
 
-def twitter_authorized(resp):
-    if not resp:
-        raise Exception('Denied!')
-    session['oauth'] = (resp['oauth_token'], resp['oauth_token_secret'])
-    return setup_user('twitter', resp['screen_name'], resp['screen_name'])
+def twitter_user_info(remote_app, resp):
+    name = resp['screen_name']
+    id = resp['user_id']
+    image_url = 'coming soon'
+    return id, name, image_url
 
 oauth_configs = dict(
     bitbucket = dict(
         base_url = 'https://api.bitbucket.org/1.0/',
         request_token_url = 'https://bitbucket.org/!api/1.0/oauth/request_token',
         access_token_url = 'https://bitbucket.org/!api/1.0/oauth/access_token',
-        authorize_url = 'https://bitbucket.org/!api/1.0/oauth/authenticate',
-        authorization_handler = bitbucket_authorized
+        authorize_url = 'https://bitbucket.org/!api/1.0/oauth/authenticate'
         ),
     github = dict(
         base_url = 'https://api.github.com/',
         request_token_url = None,
         access_token_url = 'https://github.com/login/oauth/access_token',
         authorize_url = 'https://github.com/login/oauth/authorize',
-        request_token_params = {'scope' : 'user:email'},
-        authorization_handler = github_authorized
+        request_token_params = {'scope' : 'user:email'}
         ),
     twitter = dict(
         base_url = 'https://api.twitter.com/1/',
         request_token_url = 'https://api.twitter.com/oauth/request_token',
         access_token_url = 'https://api.twitter.com/oauth/access_token',
-        authorize_url = 'https://api.twitter.com/oauth/authenticate',
-        authorization_handler = twitter_authorized
+        authorize_url = 'https://api.twitter.com/oauth/authenticate'
         ),
     google = dict(
         base_url = 'https://www.google.com/accounts/',
@@ -217,16 +228,14 @@ oauth_configs = dict(
             },
         access_token_url = 'https://accounts.google.com/o/oauth2/token',
         access_token_method = 'POST',
-        access_token_params = {'grant_type': 'authorization_code'},
-        authorization_handler = google_authorized
+        access_token_params = {'grant_type': 'authorization_code'}
         ),
     facebook = dict(
         base_url = 'https://graph.facebook.com/',
         request_token_url = None,
         access_token_url='/oauth/access_token',
         authorize_url = 'https://www.facebook.com/dialog/oauth',
-        request_token_params = {'scope': 'email'},
-        authorization_handler = facebook_authorized
+        request_token_params = {'display' : 'popup'}
         ),
     soundcloud = dict(
         base_url = 'https://api.soundcloud.com',
@@ -235,32 +244,28 @@ oauth_configs = dict(
         request_token_url = None,
         request_token_params = {'response_type' : 'code', 'display' : 'popup'},
         access_token_params = {'grant_type' : 'authorization_code'},
-        access_token_method = 'POST',
-        authorization_handler = soundcloud_authorized
+        access_token_method = 'POST'
         ),
     )
 
-def tokengetter():
-    token = session.get('oauth')
-    if current_user.is_authenticated():
-        token = current_user.oauth_token, current_user.oauth_secret
-    return token
-
 remote_apps = {}
+oauth_logins = app.config['OAUTH_LOGINS']
 for provider, config in oauth_configs.items():
-    config.update(app.config['OAUTH_LOGINS'][provider])
-    handler = config.pop('authorization_handler')
+    config.update(oauth_logins[provider])
+
+    func_name = provider + '_user_info'
+    func = globals().get(func_name)
+    if not func:
+        fmt = 'User info func %s for %s missing.'
+        raise ValueError(fmt % func_name, provider)
+
+    handler = create_oauth_authorized_handler(provider, func)
     remote_app = oauth.remote_app(provider, **config)
     remote_app.tokengetter(tokengetter)
     handler = remote_app.authorized_handler(handler)
     app.add_url_rule('/auth/' + provider + '/authorized', view_func = handler)
     remote_apps[provider] = remote_app
 
-@app.route('/logout', methods = ['POST'])
-@login_required
-def logout():
-    logout_user()
-    return jsonify(success = True)
 
 ##############################################################################
 
