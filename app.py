@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 from config import SITE_CONFIG
-from flask import Flask, jsonify, redirect, request, session, url_for
+from flask import (
+    Flask,
+    jsonify,
+    redirect,
+    request,
+    send_file,
+    session,
+    url_for
+    )
 from flask_oauth import OAuth
 from flask.ext.login import (
     LoginManager,
@@ -8,14 +16,20 @@ from flask.ext.login import (
     login_user,
     logout_user,
     current_user
-)
+    )
 from flask.ext.restless import APIManager, ProcessingException
 from flask.ext.sqlalchemy import SQLAlchemy
 from functools import wraps
 from logging import INFO, basicConfig, getLogger
 from requests import get as req_get
 from os import environ
+from sqlalchemy.orm import deferred
 from sqlalchemy.schema import CheckConstraint, UniqueConstraint
+from Image import open as im_open, ANTIALIAS
+from StringIO import StringIO
+
+basicConfig()
+getLogger('sqlalchemy.engine').setLevel(INFO)
 
 app = Flask(__name__)
 app.config.update(SITE_CONFIG)
@@ -26,11 +40,16 @@ db = SQLAlchemy(app)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     scores = db.relationship('Score', lazy = 'dynamic')
-    oauth_provider = db.Column(db.String(255))
-    oauth_id = db.Column(db.String(255))
-    oauth_token = db.Column(db.String(255))
-    oauth_secret = db.Column(db.String(255))
-    display_name = db.Column(db.String(255))
+    display_name = db.Column(db.String(255), nullable = False)
+    image = deferred(
+        db.Column(db.LargeBinary(length = 128 * 1024), nullable = False)
+        )
+
+    # These are not to be exposed.
+    oauth_provider = db.Column(db.String(255), nullable = False)
+    oauth_id = db.Column(db.String(255), nullable = False)
+    oauth_token = db.Column(db.String(255), nullable = False)
+    oauth_secret = db.Column(db.String(255), nullable = False)
 
     def is_authenticated(self):
         return True
@@ -121,6 +140,14 @@ def setup_user(oauth_provider, oauth_id, display_name, image_url):
         db.session.add(user)
     user.display_name = display_name
     user.oauth_token, user.oauth_secret = session['oauth']
+
+    # Load image
+    s = StringIO()
+    im = im_open(StringIO(req_get(image_url).content))
+    im.thumbnail((128, 128), ANTIALIAS)
+    im.save(s, 'JPEG')
+    user.image = s.getvalue()
+
     db.session.commit()
     login_user(user, remember = True)
     # Why do i need this?
@@ -166,19 +193,23 @@ def soundcloud_user_info(remote_app, resp):
     token = resp['access_token']
     headers = {'Authorization': 'OAuth ' + token}
     data = remote_app.get('/me.json', headers = headers).data
-    return data['id'], data['full_name'], 'coming'
+    return data['id'], data['full_name'], data['avatar_url']
 
 def bitbucket_user_info(remote_app, resp):
     user = remote_app.get('user').data['user']
-    return user['username'], user.get('display_name') or account_name, 'soon'
+    return user['username'], user['display_name'], user['avatar']
 
 def github_user_info(remote_app, resp):
     data = remote_app.get('/user').data
-    return data['id'], data.get('name') or data['login'], 'soon'
+    return data['id'], data.get('name') or data['login'], data['avatar_url']
 
 def facebook_user_info(remote_app, resp):
     data = remote_app.get('/me').data
-    return data['id'], data['name'], 'soon'
+    # print data
+    # image_url = remote_app.get('/me/picture').raw_data
+    id = data['id']
+    image_url = 'http://graph.facebook.com/' + id + '/picture?type=small'
+    return id, data['name'], image_url
 
 def google_user_info(remote_app, resp):
     token = resp['access_token']
@@ -190,13 +221,13 @@ def google_user_info(remote_app, resp):
     data = r.json
     if callable(data):
         data = data()
-    return data['id'], data['name'], 'soon'
+    return data['id'], data['name'], data['picture']
 
 def twitter_user_info(remote_app, resp):
     name = resp['screen_name']
     id = resp['user_id']
-    image_url = 'coming soon'
-    return id, name, image_url
+    data = remote_app.get('users/show.json?user_id=' + id).data
+    return id, name, data['profile_image_url']
 
 oauth_configs = dict(
     bitbucket = dict(
@@ -310,21 +341,42 @@ manager.create_api(
     },
     methods = [
         'DELETE', 'GET', 'PATCH', 'POST', 'PUT']
-)
+    )
 
-manager.create_api(User, methods = ['GET'])
+def filter_user(o):
+    for key in ['image', 'oauth_secret', 'oauth_token']:
+        del o[key]
+    return o
+
+def user_post_get_many(res):
+    map(filter_user, res['objects'])
+    return res
+
+manager.create_api(
+    User,
+    methods = ['GET'],
+    postprocessors = {
+        'GET_MANY' : [user_post_get_many],
+        'GET_SINGLE' : [filter_user]
+        }
+    )
 
 ##############################################################################
 
 @app.before_first_request
 def setup_db():
     pass
-    #db.drop_all()
-    #db.create_all()
+    # db.drop_all()
+    # db.create_all()
 
 @app.route('/')
 def root():
     return redirect(url_for('static', filename = 'index.html'))
+
+@app.route('/show_image/<user_id>.jpg')
+def show_image(user_id):
+    u = User.query.get(int(user_id))
+    return send_file(StringIO(u.image), mimetype = 'image/jpeg')
 
 @app.route('/whoami')
 def whoami():

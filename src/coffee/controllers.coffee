@@ -1,9 +1,16 @@
-ERROR_TEMPLATE = kendo.template '<div class="k-widget k-tooltip ' +
-    'k-tooltip-validation k-invalid-msg field-validation-error" ' +
-    'style="margin: 0.5em; display: block; >' +
-    '<span class="k-icon k-warning"></span>' +
-    '#=message#' +
-    '<div class="k-callout k-callout-n"></div></div>'
+ERROR_TEMPLATE = kendo.template '''
+    <div class="k-widget k-tooltip k-tooltip-validation k-invalid-msg field-validation-error"
+    style="margin: 0.5em; display: block; >
+    <span class="k-icon k-warning"></span>
+    #=message#
+    <div class="k-callout k-callout-n"></div></div>
+    '''
+
+USERINFO_TEMPLATE = kendo.template '''
+    <span class = "userinfo">
+        <img src="/show_image/#=id#.jpg">#=name# (#=provider#)
+    </span>
+    '''
 
 ERROR_TO_MESSAGE = {
     'unique:user_id/uq-program_date': \
@@ -122,9 +129,6 @@ handleGridError = (err) ->
     $('.field-validation-error').remove()
     el.append ERROR_TEMPLATE message: message
 
-refreshGrid = (gridId) ->
-    $('#' + gridId).data('kendoGrid').dataSource.read()
-
 ScoreListCtrl = ($scope, User) ->
     $scope.startLogin = (provider) ->
         url = '/auth/' + provider + '/login'
@@ -137,7 +141,10 @@ ScoreListCtrl = ($scope, User) ->
         if not user.display_name
             'okänd'
         else
-            user.display_name + ' (' + user.oauth_provider + ')'
+            USERINFO_TEMPLATE
+                id: user.id
+                name: user.display_name
+                provider: user.oauth_provider
     $scope.User = User
 
     User.init $scope
@@ -249,10 +256,16 @@ ScoreListCtrl = ($scope, User) ->
             {
                 field: 'user_id'
                 title: 'Spelare'
+                template: (row) ->
+                    user_id = row.user_id or $scope.User.getUser().id
+                    grid = $('#' + $scope.gridId).data 'kendoGrid'
+                    values = grid.columns[1].values
+                    (_.find values, (e) -> user_id == e.value).text
                 dsForeignKey: $scope.ddConfig
                 editor: (container, opts) ->
                     text = $scope.formatUser($scope.User.getUser())
-                    $('<span>' + text + '</span>').appendTo(container)
+                    $(text).appendTo(container)
+                encoded: true
             },
             createScoreColumn('Kvalificeringen', 'qual_score', 'qual_questions'),
             createScoreColumn('Utslagningen', 'elim_score', 'elim_questions'),

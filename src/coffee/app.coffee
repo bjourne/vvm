@@ -6,7 +6,7 @@ userAuthorized = ->
 angular.element(document).ready ->
     kendo.culture 'sv-SE'
 
-deps = ['vvm.services', 'vvm.directives', 'ui', 'ui.bootstrap']
+deps = ['vvm.services', 'vvm.directives', 'ui', 'ui.bootstrap', 'ngSanitize']
 mod = angular.module 'vvm', deps
 mod.config ['$routeProvider', ($routeProvider) ->
     $routeProvider

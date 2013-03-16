@@ -2,29 +2,42 @@
 # datasources.
 #
 # Nice recursive spaghetti code for handling asyncronous js. :)
+
+# I like this kind of metaprogramming. :)
+processArraySerially = (arr, procFun, cb) ->
+    if arr.length == 0
+        cb()
+    else
+        procFun arr[0], ->
+            processArraySerially _.rest(arr), procFun, cb
+
+
+getterFunc = (strOrFunc) ->
+    if typeof strOrFunc == 'string' then (o) -> o[strOrFunc] else strOrFunc
+
 dataSourceToValues = (ds, textFunc, valueFunc) ->
     {text: textFunc(d), value: valueFunc(d)} for d in ds.data()
 
-preloadColumns = (columns, cb) ->
-    if columns.length == 0
-        cb()
-    else
-        col = columns[0]
-        fkDef = col.dsForeignKey
-        textField = fkDef.dataTextField
-        textFunc = textField
-        if typeof textField == 'string'
-            textFunc = (e) -> e[textField]
-        valueField = fkDef.dataValueField
-        valueFunc = valueField
-        if typeof valueField == 'string'
-            valueFunc = (e) -> e[valueField]
-        ds = fkDef.dataSource
-        ds.fetch (x) ->
-            col.values = dataSourceToValues ds, textFunc, valueFunc
-            preloadColumns _.rest(columns), cb
+itemsToFkValues = (items, textFunc, valueFunc) ->
+    {text: textFunc(i), value: valueFunc(i)} for i in items
 
-preloadForeignKeys = (config, cb) ->
+preloadColumn = (c, cb) ->
+    fkDef = c.dsForeignKey
+    textGetter = getterFunc fkDef.dataTextField
+    valueGetter = getterFunc fkDef.dataValueField
+    ds = fkDef.dataSource
+    # Remove existing change handler if present
+    ds._events.change = []
+    ds.bind 'change', (e) ->
+        c.values = itemsToFkValues e.items, textGetter, valueGetter
+        cb()
+    # Trigger loading of datasource which trigger the change event.
+    ds.read()
+
+preloadColumns = (columns, cb) ->
+    processArraySerially columns, preloadColumn, cb
+
+preloadForeignKeys = (config, cb = -> null) ->
     columns = _.filter config.columns, 'dsForeignKey'
     preloadColumns columns, ->
         config.save = (e) ->
@@ -34,6 +47,11 @@ preloadForeignKeys = (config, cb) ->
             defaults = _.object keyValues
             e.model = _.merge m, defaults
         cb()
+
+refreshGrid = (gridId) ->
+    grid = $('#' + gridId).data('kendoGrid')
+    preloadForeignKeys grid, ->
+        grid.dataSource.read()
 
 mod = angular.module 'vvm.directives', []
 mod.directive 'kgrid', ->
