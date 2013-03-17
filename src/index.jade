@@ -25,11 +25,19 @@ html(ng-app="vvm")
         mixin js("http://cdn.kendostatic.com/2012.3.1114/js/cultures/kendo.culture.sv-SE.min.js")
         // Mine
         mixin js("/static/js/out.js")
-        title Vem vet mest
+        title Vem vet mest?
     body
-        .container
-            .row
-                .span12
-                    h1 Vem vet mest!
-                .span12
-                    div(ng-view)
+        header
+            .container
+                h1 Vem Vet mest?
+                p.lead Håll reda på ditt resultat!
+        #main
+            .container
+                .row
+                    .span12
+                        div(ng-view)
+        footer
+            .container
+                p.lead En sida skapad av&nbsp;
+                    a(href="http://www.bjornlindqvist.se") Björn Lindqvist
+                    |  för han behövde ett ställe att spara sina Vem vet mestresultat på.

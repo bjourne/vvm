@@ -28,8 +28,8 @@ from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 from Image import open as im_open, ANTIALIAS
 from StringIO import StringIO
 
-basicConfig()
-getLogger('sqlalchemy.engine').setLevel(INFO)
+# basicConfig()
+# getLogger('sqlalchemy.engine').setLevel(INFO)
 
 app = Flask(__name__)
 app.config.update(SITE_CONFIG)
