@@ -6,12 +6,6 @@ ERROR_TEMPLATE = kendo.template '''
     <div class="k-callout k-callout-n"></div></div>
     '''
 
-USERINFO_TEMPLATE = kendo.template '''
-    <span class = "userinfo">
-        <img src="/show_image/#=id#.jpg">#=name# (#=provider#)
-    </span>
-    '''
-
 ERROR_TO_MESSAGE = {
     'unique:user_id/uq-program_date': \
         'Det finns redan ett resultat för den här spelaren för det här datumet',
@@ -130,24 +124,8 @@ handleGridError = (err) ->
     el.append ERROR_TEMPLATE message: message
 
 ScoreListCtrl = ($scope, User) ->
-    $scope.startLogin = (provider) ->
-        url = '/auth/' + provider + '/login'
-        window.open url, null, 'height=600,width=400'
-    $scope.completeLogin = ->
-        User.init $scope, ->
-            refreshGrid $scope.gridId
-
-    $scope.formatUser = (user) ->
-        if not user.display_name
-            'okänd'
-        else
-            USERINFO_TEMPLATE
-                id: user.id
-                name: user.display_name
-                provider: user.oauth_provider
-    $scope.User = User
-
-    User.init $scope
+    $scope.$on 'userInfoChanged', (e, arg) ->
+        refreshGrid $scope.gridId
     $scope.users = new kendo.data.DataSource
         type: 'json'
         transport:
@@ -157,9 +135,6 @@ ScoreListCtrl = ($scope, User) ->
         schema:
             data: (resp) -> resp.objects
             total: (resp) -> resp.num_results
-    $scope.logout = ->
-        User.logout $scope, ->
-            refreshGrid $scope.gridId
 
     $scope.ddConfig =
         dataTextField: $scope.formatUser
