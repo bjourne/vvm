@@ -4,16 +4,14 @@ mod = angular.module('vvm.services', [])
 mod.factory 'User', ->
     @data = {is_anon: true, display_name: null, id: 0}
     getUser: => @data
-    init: (scope, cb = () -> null) =>
+    init: (cb) =>
         $.get '/whoami', {}, (data) =>
             @data = data
             @data.id = parseInt @data.id
             cb()
-            scope.$apply()
-    logout: (scope, cb) =>
+    logout: (cb) =>
         if not @isAnon
             $.post '/logout', {}, (data) =>
                 @data = {is_anon: true, display_name: null, id: 0}
                 cb()
-                scope.$apply()
 

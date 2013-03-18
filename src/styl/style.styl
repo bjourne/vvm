@@ -1,3 +1,30 @@
+$orangeD = lighten(#841E10, 10%)
+$orangeL = lighten(#C1221C, 10%)
+
+header, footer
+    background-color: $orangeD
+    background: url("/static/images/header-bg.png"), -webkit-gradient(linear, 0 0, 0 100%, from($orangeD), to($orangeL))
+    background: url("/static/images/header-bg.png"), -moz-linear-gradient($orangeD, $orangeL)
+
+    font-weight bold
+    color #fffff0
+    padding-top 25px
+
+header
+    border-bottom 1px solid #841E10
+
+footer
+    border-top 1px solid #841E10
+    text-align center
+    padding 30px
+
+#main
+    background: -webkit-gradient(radial, 250 50,0,250 50,800, from(#0CA090),to(#12584C)) transparent
+    padding-top 20px
+    min-height 1200px
+    border-left: 5px solid #333
+    border-right: 5px solid #333
+
 .k-grid .k-datepicker, .k-grid .k-numerictextbox
     width 99%
 
@@ -10,6 +37,10 @@
 .k-grid .single-line, .k-input
     margin inherit
 
+.userinfo img
+    max-width 32px
+    max-height 32px
+    padding-right 5px
 
 
 

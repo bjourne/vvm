@@ -1,9 +1,10 @@
-ERROR_TEMPLATE = kendo.template '<div class="k-widget k-tooltip ' +
-    'k-tooltip-validation k-invalid-msg field-validation-error" ' +
-    'style="margin: 0.5em; display: block; >' +
-    '<span class="k-icon k-warning"></span>' +
-    '#=message#' +
-    '<div class="k-callout k-callout-n"></div></div>'
+ERROR_TEMPLATE = kendo.template '''
+    <div class="k-widget k-tooltip k-tooltip-validation k-invalid-msg field-validation-error"
+    style="margin: 0.5em; display: block; >
+    <span class="k-icon k-warning"></span>
+    #=message#
+    <div class="k-callout k-callout-n"></div></div>
+    '''
 
 ERROR_TO_MESSAGE = {
     'unique:user_id/uq-program_date': \
@@ -78,6 +79,17 @@ createScoreColumn = (title, scoreField, questionsField) ->
         field: scoreField
     }
 
+scoreField = ->
+    type: 'number'
+    validation:
+        min: 0
+        max: 100
+
+kendoGridStateToRestless = (gs) ->
+    restlessOrder = (ob) -> {field: ob.field, direction: ob.dir}
+    order_by: (restlessOrder ob for ob in gs.sort ? [])
+    offset: (gs.page - 1) * gs.pageSize
+
 handleGridError = (err) ->
     text = err.xhr.responseText
     try
@@ -111,26 +123,9 @@ handleGridError = (err) ->
     $('.field-validation-error').remove()
     el.append ERROR_TEMPLATE message: message
 
-refreshGrid = (gridId) ->
-    $('#' + gridId).data('kendoGrid').dataSource.read()
-
 ScoreListCtrl = ($scope, User) ->
-    $scope.startLogin = (provider) ->
-        url = '/auth/' + provider + '/login'
-        window.open url, null, 'height=600,width=400'
-    $scope.completeLogin = ->
-        User.init $scope, ->
-            console.log 'user inited again...'
-            refreshGrid $scope.gridId
-
-    $scope.formatUser = (user) ->
-        if not user.display_name
-            'okänd'
-        else
-            user.display_name + ' (' + user.oauth_provider + ')'
-    $scope.User = User
-
-    User.init $scope
+    $scope.$on 'userInfoChanged', (e, arg) ->
+        refreshGrid $scope.gridId
     $scope.users = new kendo.data.DataSource
         type: 'json'
         transport:
@@ -140,9 +135,6 @@ ScoreListCtrl = ($scope, User) ->
         schema:
             data: (resp) -> resp.objects
             total: (resp) -> resp.num_results
-    $scope.logout = ->
-        User.logout $scope, ->
-            refreshGrid $scope.gridId
 
     $scope.ddConfig =
         dataTextField: $scope.formatUser
@@ -152,9 +144,13 @@ ScoreListCtrl = ($scope, User) ->
     $scope.gridId = 'theGrid'
     $scope.config =
         dataSource:
+            allowUnsort: false
             serverPaging: true
             serverSorting: true
             serverFiltering: true
+            sort:
+                field: 'program_date'
+                dir: 'desc'
             pageSize: 10
             type: 'json'
             batch: false
@@ -162,10 +158,7 @@ ScoreListCtrl = ($scope, User) ->
             # My extension
             errorContainer: $scope.gridId
             transport:
-                read:
-                    url: '/api/score'
-                    dataType: 'json'
-                    type: 'get'
+                read: '/api/score'
                 create:
                     url: '/api/score'
                     contentType: 'application/json; charset=utf-8'
@@ -185,6 +178,11 @@ ScoreListCtrl = ($scope, User) ->
                     if op != 'read'
                         data.program_date = dateToUTC data.program_date
                         return kendo.stringify data
+                    else
+                        q = kendoGridStateToRestless data
+                        q = kendo.stringify q
+                        q = encodeURIComponent q
+                        return 'q=' + q
             schema:
                 data: (resp) -> resp.objects
                 total: (resp) -> resp.num_results
@@ -197,20 +195,12 @@ ScoreListCtrl = ($scope, User) ->
                             nullable: true
                         program_date: {type: 'date'}
                         user_id: {type: 'number'}
-                        qual_score:
-                            type: 'number'
-                            validation:
-                                min: 0
-                                max: 100
-                        qual_questions:
-                            type: 'number'
-                            validation:
-                                min: 0
-                                max: 100
-                        elim_score: {type: 'number'},
-                        elim_questions: {type: 'number'}
-                        final_score: {type: 'number'}
-                        final_questions: {type: 'number'}
+                        qual_score: scoreField()
+                        qual_questions: scoreField()
+                        elim_score: scoreField()
+                        elim_questions: scoreField()
+                        final_score: scoreField()
+                        final_questions: scoreField()
         toolbar: [
             # Disable when anon
             {name: 'create', text: 'Lägg in poäng'}
@@ -228,6 +218,9 @@ ScoreListCtrl = ($scope, User) ->
             destroy: true
             confirmation: 'Säker på att du vill ta bort poängen?'
             mode: 'inline'
+        sortable:
+            allowUnsort: false
+        pageable: true
         scrollable: false
         columns: [
             {
@@ -238,10 +231,16 @@ ScoreListCtrl = ($scope, User) ->
             {
                 field: 'user_id'
                 title: 'Spelare'
+                template: (row) ->
+                    user_id = row.user_id or $scope.User.getUser().id
+                    grid = $('#' + $scope.gridId).data 'kendoGrid'
+                    values = grid.columns[1].values
+                    (_.find values, (e) -> user_id == e.value).text
                 dsForeignKey: $scope.ddConfig
                 editor: (container, opts) ->
                     text = $scope.formatUser($scope.User.getUser())
-                    $('<span>' + text + '</span>').appendTo(container)
+                    $(text).appendTo(container)
+                encoded: true
             },
             createScoreColumn('Kvalificeringen', 'qual_score', 'qual_questions'),
             createScoreColumn('Utslagningen', 'elim_score', 'elim_questions'),
