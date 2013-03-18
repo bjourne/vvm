@@ -13,7 +13,7 @@ userAuthorized = ->
 angular.element(document).ready ->
     kendo.culture 'sv-SE'
 
-deps = ['vvm.services', 'vvm.directives', 'ui', 'ui.bootstrap', 'ngSanitize']
+deps = ['vvm.services', 'vvm.directives', 'ngSanitize']
 mod = angular.module 'vvm', deps
 mod.config ['$routeProvider', ($routeProvider) ->
     $routeProvider
@@ -22,6 +22,15 @@ mod.config ['$routeProvider', ($routeProvider) ->
             controller: ScoreListCtrl
         .otherwise redirectTo: '/scores'
     ]
+
+SOCIAL_LOGINS = [
+    {text: 'Twitter', value: '1', icon: 'twitter.png'},
+    {text: 'Google+', value: '2', icon: 'gplus.png'},
+    {text: 'Facebook', value: '3', icon: 'facebook.png'},
+    {text: 'Github', value: '4', icon: 'github.png'},
+    {text: 'SoundCloud', value: '5', icon: 'soundcloud.png'}
+    {text: 'BitBucket', value: '6', icon: 'bitbucket.png'}  
+    ]    
 
 mod.run ($rootScope, User) ->
     $rootScope.startLogin = (provider) ->
@@ -35,10 +44,17 @@ mod.run ($rootScope, User) ->
         User.logout ->
             $rootScope.$broadcast 'userInfoChanged'
             $rootScope.$apply()
+    $rootScope.providersConfig =
+        optionLabel: 'Logga in här!'
+        dataTextField: 'text',
+        dataValueField: 'value'
+        template: '<div class="loginalt"><img src = "/static/images/favicons/${ data.icon }"/> ${ data.text }</div>'
+        dataSource: SOCIAL_LOGINS 
+    $rootScope.ddId = 'providers'                    
 
     $rootScope.formatUser = (user) ->
         if not user.display_name
-            'okänd'
+            'okÃ¤nd'
         else
             USERINFO_TEMPLATE
                 id: user.id

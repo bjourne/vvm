@@ -136,11 +136,6 @@ ScoreListCtrl = ($scope, User) ->
             data: (resp) -> resp.objects
             total: (resp) -> resp.num_results
 
-    $scope.ddConfig =
-        dataTextField: $scope.formatUser
-        dataValueField: 'id'
-        dataSource: $scope.users
-
     $scope.gridId = 'theGrid'
     $scope.config =
         dataSource:
@@ -236,7 +231,10 @@ ScoreListCtrl = ($scope, User) ->
                     grid = $('#' + $scope.gridId).data 'kendoGrid'
                     values = grid.columns[1].values
                     (_.find values, (e) -> user_id == e.value).text
-                dsForeignKey: $scope.ddConfig
+                dsForeignKey:
+                    dataTextField: $scope.formatUser
+                    dataValueField: 'id'
+                    dataSource: $scope.users
                 editor: (container, opts) ->
                     text = $scope.formatUser($scope.User.getUser())
                     $(text).appendTo(container)
