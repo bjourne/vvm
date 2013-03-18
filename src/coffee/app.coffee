@@ -45,7 +45,7 @@ mod.run ($rootScope, User) ->
             $rootScope.$broadcast 'userInfoChanged'
             $rootScope.$apply()
     $rootScope.providersConfig =
-        optionLabel: 'Logga in här!'
+        optionLabel: 'Välj nätverk...'
         dataTextField: 'text',
         dataValueField: 'value'
         template: '<div class="loginalt"><img src = "/static/images/favicons/${ data.icon }"/> ${ data.text }</div>'

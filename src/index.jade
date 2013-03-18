@@ -33,7 +33,7 @@ html(ng-app="vvm")
                         p.lead Håll reda på ditt resultat!
                     .span3.userbox(ng-switch, on="User.getUser().is_anon")
                         span(ng-switch-when="true")
-                            span Välj nätverk att logga in med:
+                            span Logga in för att lägga in ditt resultat:
                             kdropdown(config="providersConfig", dropdownid = "ddId") 
                         span(ng-switch-default)
                             | Inloggad!
