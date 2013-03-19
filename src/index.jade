@@ -31,12 +31,17 @@ html(ng-app="vvm")
                     .span8
                         h1 Vem Vet mest?
                         p.lead Håll reda på ditt resultat!
-                    .span3.userbox(ng-switch, on="User.getUser().is_anon")
-                        span(ng-switch-when="true")
-                            span Logga in för att lägga in ditt resultat:
-                            kdropdown(config="providersConfig", dropdownid = "ddId") 
-                        span(ng-switch-default)
-                            | Inloggad!
+                    .span3.userbox(ng-switch, on = "!User.getUser().is_anon")
+                        div(ng-switch-when = "true")
+                            p.info
+                                img(ng-src="{{ '/show_image/' + User.getUser().id + '.jpg' }}")
+                                |  {{User.getUser().display_name}} ({{User.getUser().oauth_provider}})
+                            p
+                                button.k-button(ng-click="logout()") Logga ut
+                        div(ng-switch-default)
+                            p Logga in för att lägga in ditt resultat:
+                            p
+                                kdropdown(config="providersConfig", dropdownid = "ddId")                             
         #main
             .container
                 .row

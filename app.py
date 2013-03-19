@@ -2,6 +2,7 @@
 from config import SITE_CONFIG
 from flask import (
     Flask,
+    abort,
     jsonify,
     redirect,
     request,
@@ -378,7 +379,13 @@ def root():
 
 @app.route('/show_image/<user_id>.jpg')
 def show_image(user_id):
-    u = User.query.get(int(user_id))
+    try:
+        uid = int(user_id)
+    except ValueError:
+        return abort(404)
+    u = User.query.get(uid)
+    if not u:
+        return abort(404)
     return send_file(StringIO(u.image), mimetype = 'image/jpeg')
 
 @app.route('/whoami')

@@ -1,12 +1,1 @@
 kgrid(config="config",gridid="gridId")
-p
-a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('twitter')") Logga in med Twitter
-a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('google')") Logga in med Google+
-a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('facebook')") Logga in med Facebook
-a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('github')") Logga in med Github
-a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('bitbucket')") Logga in med Bitbucket
-a.btn(data-ng-show="User.getUser().is_anon", ng-click="startLogin('soundcloud')") Logga in med Soundcloud
-a.btn(ng-click="logout()",data-ng-hide="User.getUser().is_anon") Logga ut
-p(ng-bind-html-unsafe="formatUser(User.getUser())")
-
-

@@ -4,6 +4,17 @@ USERINFO_TEMPLATE = kendo.template '''
     </span>
     '''
 
+PROVIDER_TEMPLATE = kendo.template '''
+    <div class = "loginalt">
+        #if (data.slug) { #
+        <img src = "/static/images/favicons/#=data.slug#.png"/>
+        #=data.text#
+        # } else { #
+        Välj nätverk... 
+        # } #
+    </div>
+    '''    
+
 userAuthorized = ->
     el = $('html[ng-app]')[0]
     scope = angular.element(el).scope()
@@ -24,12 +35,12 @@ mod.config ['$routeProvider', ($routeProvider) ->
     ]
 
 SOCIAL_LOGINS = [
-    {text: 'Twitter', value: '1', icon: 'twitter.png'},
-    {text: 'Google+', value: '2', icon: 'gplus.png'},
-    {text: 'Facebook', value: '3', icon: 'facebook.png'},
-    {text: 'Github', value: '4', icon: 'github.png'},
-    {text: 'SoundCloud', value: '5', icon: 'soundcloud.png'}
-    {text: 'BitBucket', value: '6', icon: 'bitbucket.png'}  
+    {text: 'Twitter', slug: 'twitter'},
+    {text: 'Google+', slug: 'google'},
+    {text: 'Facebook', slug: 'facebook'},
+    {text: 'Github', slug: 'github'},
+    {text: 'SoundCloud', slug: 'soundcloud'},
+    {text: 'BitBucket', slug: 'bitbucket'}
     ]    
 
 mod.run ($rootScope, User) ->
@@ -48,18 +59,18 @@ mod.run ($rootScope, User) ->
         optionLabel: 'Välj nätverk...'
         dataTextField: 'text',
         dataValueField: 'value'
-        template: '<div class="loginalt"><img src = "/static/images/favicons/${ data.icon }"/> ${ data.text }</div>'
-        dataSource: SOCIAL_LOGINS 
-    $rootScope.ddId = 'providers'                    
+        template: PROVIDER_TEMPLATE 
+        dataSource: SOCIAL_LOGINS
+        select: (e) ->
+            provider = (@dataItem e.item.index()).slug
+            $rootScope.startLogin provider
+    $rootScope.ddId = 'providers'
 
     $rootScope.formatUser = (user) ->
-        if not user.display_name
-            'okÃ¤nd'
-        else
-            USERINFO_TEMPLATE
-                id: user.id
-                name: user.display_name
-                provider: user.oauth_provider
+        USERINFO_TEMPLATE
+            id: user.id
+            name: user.display_name
+            provider: user.oauth_provider
     $rootScope.User = User
     $rootScope.completeLogin()
 
