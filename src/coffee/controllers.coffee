@@ -1,6 +1,6 @@
 ERROR_TEMPLATE = kendo.template '''
     <div class="k-widget k-tooltip k-tooltip-validation k-invalid-msg field-validation-error"
-    style="margin: 0.5em; display: block; >
+    style="margin: 0.5em; display: block;" >
     <span class="k-icon k-warning"></span>
     #=message#
     <div class="k-callout k-callout-n"></div></div>
@@ -32,7 +32,6 @@ ERROR_TO_MESSAGE = {
 }
 
 ##############################################################################
-
 dateToUTC = (date) ->
     new Date Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
 
@@ -51,9 +50,8 @@ parsePgError = (text) ->
         [key, result]
 
 appendScoreInput = (container, field) ->
-    $('<input type="text" name="' +
-        field + '" data-bind="value:' + field +
-        '" style="width: 55px"/>'
+    $('<input type="text" style="width: 55px" name="' +
+        field + '" data-bind="value:' + field + '"/>'
     )
         .appendTo(container)
         .kendoNumericTextBox
@@ -197,25 +195,33 @@ ScoreListCtrl = ($scope, User) ->
                         final_score: scoreField()
                         final_questions: scoreField()
         toolbar: [
-            # Disable when anon
-            {name: 'create', text: 'Lägg in poäng'}
-        ]
+            {name: 'create', text: 'Lägg in din poäng'}
+        ]            
+        #TOOLBAR_TEMPLATE 
         dataBound: ->
             grid = this
             userId = $scope.User.getUser().id
-            $('#' + $scope.gridId + ' tbody tr .k-button')
+            $grid = $('#' + $scope.gridId)
+            $grid.find('tbody tr .k-button')
                 .each ->
                     $el = $(this)
                     di = grid.dataItem $el.closest('tr')
                     $el.toggle di.user_id == userId
-        editable:
+            $grid.find('.k-toolbar').toggle(userId > 0)
+        editable: 
             update: true
             destroy: true
             confirmation: 'Säker på att du vill ta bort poängen?'
             mode: 'inline'
         sortable:
             allowUnsort: false
-        pageable: true
+        pageable:
+            messages:
+                display: '{0} - {1} av {2} resultat'
+                previous: 'Föregående sida'
+                next: 'Nästa sida'
+                first: 'Första sidan'
+                last: 'Sista sidan'
         scrollable: false
         columns: [
             {

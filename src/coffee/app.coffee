@@ -16,8 +16,7 @@ PROVIDER_TEMPLATE = kendo.template '''
     '''    
 
 userAuthorized = ->
-    el = $('html[ng-app]')[0]
-    scope = angular.element(el).scope()
+    scope = ngGetElementScope 'html[ng-app]'
     scope = scope.$$childHead
     scope.completeLogin()
 

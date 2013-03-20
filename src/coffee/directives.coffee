@@ -78,7 +78,8 @@ mod.directive 'kdropdown', ->
         config: '=config'
         dropdownid: '=dropdownid'
     template: '<div id="{{dropdownid}}"></div>'
-    link: (scope, el, attrs) -> el.kendoDropDownList scope.config
+    link: (scope, el, attrs) ->
+        el.kendoDropDownList scope.config
 
 
 
