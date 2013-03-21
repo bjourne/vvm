@@ -86,7 +86,6 @@ scoreField = ->
 kendoGridStateToRestless = (gs) ->
     restlessOrder = (ob) -> {field: ob.field, direction: ob.dir}
     order_by: (restlessOrder ob for ob in gs.sort ? [])
-    offset: (gs.page - 1) * gs.pageSize
 
 handleGridError = (err) ->
     text = err.xhr.responseText
@@ -175,7 +174,7 @@ ScoreListCtrl = ($scope, User) ->
                         q = kendoGridStateToRestless data
                         q = kendo.stringify q
                         q = encodeURIComponent q
-                        return 'q=' + q
+                        return 'q=' + q + '&page=' + data.page
             schema:
                 data: (resp) -> resp.objects
                 total: (resp) -> resp.num_results
@@ -197,7 +196,6 @@ ScoreListCtrl = ($scope, User) ->
         toolbar: [
             {name: 'create', text: 'Lägg in din poäng'}
         ]            
-        #TOOLBAR_TEMPLATE 
         dataBound: ->
             grid = this
             userId = $scope.User.getUser().id
@@ -236,7 +234,9 @@ ScoreListCtrl = ($scope, User) ->
                     user_id = row.user_id or $scope.User.getUser().id
                     grid = $('#' + $scope.gridId).data 'kendoGrid'
                     values = grid.columns[1].values
-                    (_.find values, (e) -> user_id == e.value).text
+                    selValue = _.find values, (e) -> user_id == e.value
+                    msg = 'Användare med id ' + user_id + ' saknas!'
+                    if selValue then selValue.text else msg
                 dsForeignKey:
                     dataTextField: $scope.formatUser
                     dataValueField: 'id'

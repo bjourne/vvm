@@ -11,7 +11,6 @@ processArraySerially = (arr, procFun, cb) ->
         procFun arr[0], ->
             processArraySerially _.rest(arr), procFun, cb
 
-
 getterFunc = (strOrFunc) ->
     if typeof strOrFunc == 'string' then (o) -> o[strOrFunc] else strOrFunc
 

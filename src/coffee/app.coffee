@@ -10,7 +10,7 @@ PROVIDER_TEMPLATE = kendo.template '''
         <img src = "/static/images/favicons/#=data.slug#.png"/>
         #=data.text#
         # } else { #
-        Välj nätverk... 
+        Välj nätverk...
         # } #
     </div>
     '''    
@@ -55,7 +55,7 @@ mod.run ($rootScope, User) ->
             $rootScope.$broadcast 'userInfoChanged'
             $rootScope.$apply()
     $rootScope.providersConfig =
-        optionLabel: 'Välj nätverk...'
+        optionLabel: 'VÃ¤lj nÃ¤tverk...'
         dataTextField: 'text',
         dataValueField: 'value'
         template: PROVIDER_TEMPLATE 

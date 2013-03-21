@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from config import SITE_CONFIG
+from datagen import generate_ascii, generate_date, generate_name
 from flask import (
     Flask,
     abort,
@@ -22,15 +23,17 @@ from flask.ext.restless import APIManager, ProcessingException
 from flask.ext.sqlalchemy import SQLAlchemy
 from functools import wraps
 from logging import INFO, basicConfig, getLogger
+from random import randint
 from requests import get as req_get
 from os import environ
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import deferred
 from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 from Image import open as im_open, ANTIALIAS
 from StringIO import StringIO
 
-# basicConfig()
-# getLogger('sqlalchemy.engine').setLevel(INFO)
+basicConfig()
+getLogger('sqlalchemy.engine').setLevel(INFO)
 
 app = Flask(__name__)
 app.config.update(SITE_CONFIG)
@@ -69,7 +72,7 @@ class User(db.Model):
 
 class Score(db.Model):
     id = db.Column(db.Integer, primary_key = True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False)
     program_date = db.Column(db.Date, nullable = False)
     qual_score = db.Column(db.Integer, nullable = False)
     qual_questions = db.Column(db.Integer, nullable = False)
@@ -362,7 +365,8 @@ manager.create_api(
     postprocessors = {
         'GET_MANY' : [user_post_get_many],
         'GET_SINGLE' : [filter_user]
-        }
+        },
+    max_results_per_page = None
     )
 
 ##############################################################################
@@ -370,8 +374,8 @@ manager.create_api(
 @app.before_first_request
 def setup_db():
     pass
-    # db.drop_all()
-    # db.create_all()
+    #db.drop_all()
+    #db.create_all()
 
 @app.route('/')
 def root():
@@ -397,6 +401,40 @@ def whoami():
         oauth_provider = getattr(current_user, 'oauth_provider', None),
         id = id
     )
+
+@app.route('/gendata')
+def gendata():
+    user = User.query.first()
+    if not user:
+        return 'no user found!'
+    image = user.image
+    for x in range(5):
+        u = User()
+        u.display_name = generate_name()
+        u.image = image
+        u.oauth_provider = generate_ascii()
+        u.oauth_id = generate_ascii()
+        u.oauth_token = generate_ascii()
+        u.oauth_secret = generate_ascii()
+        db.session.add(u)
+        db.session.commit()
+        for y in range(5):
+            s = Score()
+            s.user_id = u.id
+            s.program_date = generate_date()
+            s.qual_score = randint(1, 50)
+            s.qual_questions = randint(25, 75)
+            s.elim_score = randint(1, 50)
+            s.elim_questions = randint(25, 75)
+            s.final_score = randint(1, 50)
+            s.final_questions = randint(25, 75)
+            db.session.add(s)
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+    db.session.commit()
+    return 'Users generated...'
 
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
