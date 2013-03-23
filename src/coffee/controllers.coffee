@@ -49,10 +49,17 @@ parsePgError = (text) ->
         key = [result.type, result.name].join(":")
         [key, result]
 
+objToHtmlAttrs = (obj) ->
+    ((_.pairs obj).map ([k, v]) -> k + '="' + v + '"').join(' ')
+
 appendScoreInput = (container, field) ->
-    $('<input type="text" style="width: 55px" name="' +
-        field + '" data-bind="value:' + field + '"/>'
-    )
+    inputArgs = (field) ->
+        type: "text"
+        style: "width: 55px"
+        name: field
+        'data-bind': 'value: ' + field
+    text = '<input ' + objToHtmlAttrs(inputArgs(field)) + '/>'
+    $(text)
         .appendTo(container)
         .kendoNumericTextBox
             format: "#"
@@ -196,8 +203,8 @@ ScoreListCtrl = ($scope, User) ->
                         final_questions: scoreField()
         toolbar: [
             {name: 'create', text: 'Lägg in din poäng'}
-        ]            
-        #TOOLBAR_TEMPLATE 
+        ]
+        #TOOLBAR_TEMPLATE
         dataBound: ->
             grid = this
             userId = $scope.User.getUser().id
@@ -208,7 +215,7 @@ ScoreListCtrl = ($scope, User) ->
                     di = grid.dataItem $el.closest('tr')
                     $el.toggle di.user_id == userId
             $grid.find('.k-toolbar').toggle(userId > 0)
-        editable: 
+        editable:
             update: true
             destroy: true
             confirmation: 'Säker på att du vill ta bort poängen?'
