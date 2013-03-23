@@ -418,7 +418,7 @@ def gendata():
         u.oauth_secret = generate_ascii()
         db.session.add(u)
         db.session.commit()
-        for y in range(5):
+        for y in range(50):
             s = Score()
             s.user_id = u.id
             s.program_date = generate_date()

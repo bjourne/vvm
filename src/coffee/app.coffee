@@ -13,7 +13,7 @@ PROVIDER_TEMPLATE = kendo.template '''
         Välj nätverk...
         # } #
     </div>
-    '''    
+    '''
 
 userAuthorized = ->
     scope = ngGetElementScope 'html[ng-app]'
@@ -40,7 +40,7 @@ SOCIAL_LOGINS = [
     {text: 'Github', slug: 'github'},
     {text: 'SoundCloud', slug: 'soundcloud'},
     {text: 'BitBucket', slug: 'bitbucket'}
-    ]    
+    ]
 
 mod.run ($rootScope, User) ->
     $rootScope.startLogin = (provider) ->
@@ -55,10 +55,10 @@ mod.run ($rootScope, User) ->
             $rootScope.$broadcast 'userInfoChanged'
             $rootScope.$apply()
     $rootScope.providersConfig =
-        optionLabel: 'VÃ¤lj nÃ¤tverk...'
+        optionLabel: 'Välj nätverk...'
         dataTextField: 'text',
         dataValueField: 'value'
-        template: PROVIDER_TEMPLATE 
+        template: PROVIDER_TEMPLATE
         dataSource: SOCIAL_LOGINS
         select: (e) ->
             provider = (@dataItem e.item.index()).slug
