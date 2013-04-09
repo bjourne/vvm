@@ -2,6 +2,7 @@ from flask import Flask, redirect, url_for
 from flask.ext.sqlalchemy import SQLAlchemy
 from logging import INFO, basicConfig, getLogger
 
+
 app = Flask(__name__)
 app.config.from_object('config')
 db = SQLAlchemy(app)

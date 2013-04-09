@@ -1,5 +1,6 @@
 from app import app, db
 from app.users.models import User
+from app.utils import slugify
 from flask import (
     Blueprint,
     abort,
@@ -39,6 +40,7 @@ def whoami():
     id = current_user.get_id()
     return jsonify(
         is_anon = id is None,
+        display_slug = getattr(current_user, 'display_slug', None),
         display_name = getattr(current_user, 'display_name', None),
         oauth_provider = getattr(current_user, 'oauth_provider', None),
         id = id
@@ -83,6 +85,7 @@ def setup_user(oauth_provider, oauth_id, display_name, image_url):
     if not user:
         user = User(**key)
         db.session.add(user)
+    user.display_slug = slugify(display_name)
     user.display_name = display_name
     user.oauth_token, user.oauth_secret = session['oauth']
 

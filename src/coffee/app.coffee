@@ -1,9 +1,3 @@
-USERINFO_TEMPLATE = kendo.template '''
-    <span class = "userinfo">
-        <img src="#=imageUrl#">#=name# (#=provider#)
-    </span>
-    '''
-
 PROVIDER_TEMPLATE = kendo.template '''
     <div class = "loginalt">
         #if (data.slug) { #
@@ -30,6 +24,9 @@ mod.config ['$routeProvider', ($routeProvider) ->
         .when '/scores'
             templateUrl: 'partials/score.html'
             controller: ScoreListCtrl
+        .when '/users/:slug'
+            templateUrl: 'partials/user.html'
+            controller: UserInstCtrl            
         .otherwise redirectTo: '/scores'
     ]
 
@@ -66,7 +63,14 @@ mod.run ($rootScope, User, Urls) ->
     $rootScope.ddId = 'providers'
 
     $rootScope.formatUser = (user) ->
-        USERINFO_TEMPLATE
+        userinfo = kendo.template '''
+        <span class = "userinfo">
+            <img src="#=imageUrl#">
+            <a href = "\\#/users/#=slug#">#=name#</a> (#=provider#)
+        </span>
+        '''
+        userinfo
+            slug: user.display_slug
             id: user.id
             name: user.display_name
             provider: user.oauth_provider

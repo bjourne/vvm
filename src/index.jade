@@ -29,7 +29,8 @@ html(ng-app="vvm")
             .container
                 .row
                     .span8
-                        h1 Vem Vet mest?
+                        h1
+                            a(href="/") Vem Vet mest?
                         p.lead Håll reda på ditt resultat!
                     .span3.userbox(ng-switch, on = "!User.getUser().is_anon")
                         div(ng-switch-when = "true")

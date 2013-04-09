@@ -34,9 +34,6 @@ ERROR_TO_MESSAGE = {
 }
 
 ##############################################################################
-dateToUTC = (date) ->
-    new Date Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-
 parsePgError = (text) ->
     expressions = [
         '\\((?<error>[^\)]+)\\) duplicate key value violates (?<type>unique) constraint "(?<name>[^"]+)"\\s+' +
@@ -50,9 +47,6 @@ parsePgError = (text) ->
     else
         key = [result.type, result.name].join(":")
         [key, result]
-
-objToHtmlAttrs = (obj) ->
-    ((_.pairs obj).map ([k, v]) -> k + '="' + v + '"').join(' ')
 
 appendScoreInput = (container, field) ->
     inputArgs = (field) ->
@@ -141,10 +135,7 @@ ScoreListCtrl = ($scope, User, Urls) ->
         refreshGrid $scope.gridId
     $scope.users = new kendo.data.DataSource
         type: 'json'
-        transport:
-            read:
-                url: '/api/user'
-                dataType: 'json'
+        transport: kendoRestlessTransport '/api/user'
         schema:
             data: (resp) -> resp.objects
             total: (resp) -> resp.num_results
@@ -165,32 +156,7 @@ ScoreListCtrl = ($scope, User, Urls) ->
             error: handleGridError
             # My extension
             errorContainer: $scope.gridId
-            transport:
-                read: '/api/score'
-                create:
-                    url: '/api/score'
-                    contentType: 'application/json; charset=utf-8'
-                    dataType: 'json'
-                    type: 'post'
-                update:
-                    url: (o) -> '/api/score/' + o.id
-                    contentType: 'application/json; charset=utf-8'
-                    dataType: 'json'
-                    type: 'patch'
-                destroy:
-                    url: (o) -> '/api/score/' + o.id
-                    contentType: 'application/json; charset=utf-8'
-                    dataType: 'json'
-                    type: 'delete'
-                parameterMap: (data, op) ->
-                    if op != 'read'
-                        data.program_date = dateToUTC data.program_date
-                        return kendo.stringify data
-                    else
-                        q = kendoGridStateToRestless data
-                        q = kendo.stringify q
-                        q = encodeURIComponent q
-                        return 'q=' + q + '&page=' + data.page
+            transport: kendoRestlessTransport '/api/score'
             schema:
                 data: (resp) -> resp.objects
                 total: (resp) -> resp.num_results
@@ -279,3 +245,6 @@ ScoreListCtrl = ($scope, User, Urls) ->
                 title: '&nbsp;'
             }
         ]
+
+UserInstCtrl = ($scope) ->
+    null

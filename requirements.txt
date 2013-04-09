@@ -12,3 +12,4 @@ Flask-Login
 requests>=0.14.1
 lxml>=2.3.2
 PIL>=1.1.7
+unidecode>=0.04.5

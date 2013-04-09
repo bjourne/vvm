@@ -51,6 +51,7 @@ preloadForeignKeys = (config, cb = -> null) ->
         cb()
 
 refreshGrid = (gridId) ->
+    log 'refreshGrid'
     grid = $('#' + gridId).data('kendoGrid')
     preloadForeignKeys grid, ->
         grid.dataSource.read()

@@ -1,10 +1,12 @@
 from app import db
 from sqlalchemy.orm import deferred
+from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     scores = db.relationship('Score', lazy = 'dynamic')
     display_name = db.Column(db.String(255), nullable = False)
+    display_slug = db.Column(db.String(255), nullable = False, unique = True)
     image = deferred(
         db.Column(db.LargeBinary(length = 128 * 1024), nullable = False)
         )
