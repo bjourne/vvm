@@ -1,0 +1,19 @@
+from flask import Flask
+from flask.ext.sqlalchemy import SQLAlchemy
+from logging import INFO, basicConfig, getLogger
+
+app = Flask(__name__)
+app.config.from_object('config')
+db = SQLAlchemy(app)
+
+basicConfig()
+getLogger('sqlalchemy.engine').setLevel(INFO)
+
+from app.users.views import mod as users_mod, setup_oauth
+from app.restapi.views import setup_api
+
+setup_oauth(app)
+app.register_blueprint(users_mod)
+setup_api(app, db)
+
+
