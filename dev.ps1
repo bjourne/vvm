@@ -1,4 +1,4 @@
-$builddir="static"
+$builddir="app/static"
 jade -P src/index.jade -O $builddir
 jade -P src/auth_recv.jade -O $builddir
 jade -P src/partials -O $builddir/partials

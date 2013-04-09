@@ -1,3 +1,5 @@
+log = (args...) -> console.log 'controllers', args...
+
 ERROR_TEMPLATE = kendo.template '''
     <div class="k-widget k-tooltip k-tooltip-validation k-invalid-msg field-validation-error"
     style="margin: 0.5em; display: block;" >
@@ -120,14 +122,21 @@ handleGridError = (err) ->
         alert 'No grid with id ' + gridId + ' found.'
         return
     container = grid.editable.element
-    el = container.find('[data-bind="value:' + field + '"]').closest('td')
+
+    # one td may contain multiple fields.
+    el = container.find('[data-bind="value: ' + field + '"]').closest('td')
     if not el.length
-        alert 'No element found for field: ' + field
+        el = container.find('[data-container-for="' + field + '"]')
+    
+    if not el.length
+        msg = 'No element found for field: ' + field
+        log 'handleGridError', msg
+        alert msg
         return
     $('.field-validation-error').remove()
     el.append ERROR_TEMPLATE message: message
 
-ScoreListCtrl = ($scope, User) ->
+ScoreListCtrl = ($scope, User, Urls) ->
     $scope.$on 'userInfoChanged', (e, arg) ->
         refreshGrid $scope.gridId
     $scope.users = new kendo.data.DataSource

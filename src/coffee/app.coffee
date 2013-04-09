@@ -1,6 +1,6 @@
 USERINFO_TEMPLATE = kendo.template '''
     <span class = "userinfo">
-        <img src="/show_image/#=id#.jpg">#=name# (#=provider#)
+        <img src="#=imageUrl#">#=name# (#=provider#)
     </span>
     '''
 
@@ -42,9 +42,9 @@ SOCIAL_LOGINS = [
     {text: 'BitBucket', slug: 'bitbucket'}
     ]
 
-mod.run ($rootScope, User) ->
+mod.run ($rootScope, User, Urls) ->
     $rootScope.startLogin = (provider) ->
-        url = '/auth/' + provider + '/login'
+        url = Urls.logIn provider
         window.open url, null, 'height=600,width=400'
     $rootScope.completeLogin = ->
         User.init ->
@@ -70,6 +70,7 @@ mod.run ($rootScope, User) ->
             id: user.id
             name: user.display_name
             provider: user.oauth_provider
+            imageUrl: Urls.showImage(user.id)
     $rootScope.User = User
     $rootScope.completeLogin()
 

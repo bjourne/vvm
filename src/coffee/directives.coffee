@@ -4,6 +4,8 @@
 # Nice recursive spaghetti code for handling asyncronous js. :)
 
 # I like this kind of metaprogramming. :)
+log = (args...) -> console.log 'directives', args...
+
 processArraySerially = (arr, procFun, cb) ->
     if arr.length == 0
         cb()
@@ -37,6 +39,7 @@ preloadColumns = (columns, cb) ->
     processArraySerially columns, preloadColumn, cb
 
 preloadForeignKeys = (config, cb = -> null) ->
+    log 'preloadForeignKeys', config
     columns = _.filter config.columns, 'dsForeignKey'
     preloadColumns columns, ->
         config.save = (e) ->

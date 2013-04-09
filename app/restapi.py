@@ -1,7 +1,11 @@
 from app.scores.models import Score
 from app.users.models import User
 from flask import current_app
+from flask.ext.login import current_user
 from flask.ext.restless import APIManager, ProcessingException
+
+def get_current_user_id():
+    return int(current_user.get_id() or 0)
 
 def score_check_owner(instid):
     try:
@@ -30,7 +34,8 @@ def post_post(data):
     return {'objects' : [data]}
 
 def filter_user(o):
-    for key in ['image', 'oauth_secret', 'oauth_token']:
+    keys = [k for k in ['image', 'oauth_secret', 'oauth_token'] if k in o]
+    for key in keys:
         del o[key]
     return o
 
