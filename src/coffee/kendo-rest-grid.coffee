@@ -29,5 +29,13 @@ kendoRestlessTransport = (baseUrl) ->
             q = kendo.stringify q
             q = encodeURIComponent q
             return 'q=' + q + '&page=' + data.page
+
+kendoSwedishPagination = ->
+    display: '{0} - {1} av {2} resultat'
+    previous: 'Föregående sida'
+    next: 'Nästa sida'
+    first: 'Första sidan'
+    last: 'Sista sidan'
+    
     
 

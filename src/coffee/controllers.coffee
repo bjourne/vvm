@@ -86,10 +86,6 @@ scoreField = ->
         min: 0
         max: 100
 
-kendoGridStateToRestless = (gs) ->
-    restlessOrder = (ob) -> {field: ob.field, direction: ob.dir}
-    order_by: (restlessOrder ob for ob in gs.sort ? [])
-
 handleGridError = (err) ->
     text = err.xhr.responseText
     try
@@ -196,12 +192,7 @@ ScoreListCtrl = ($scope, User, Urls) ->
         sortable:
             allowUnsort: false
         pageable:
-            messages:
-                display: '{0} - {1} av {2} resultat'
-                previous: 'Föregående sida'
-                next: 'Nästa sida'
-                first: 'Första sidan'
-                last: 'Sista sidan'
+            messages: kendoSwedishPagination()
         scrollable: false
         columns: [
             {
