@@ -22,10 +22,10 @@ mod = angular.module 'vvm', deps
 mod.config ['$routeProvider', ($routeProvider) ->
     $routeProvider
         .when '/scores'
-            templateUrl: 'partials/score.html'
+            templateUrl: 'static/partials/score.html'
             controller: ScoreListCtrl
         .when '/users/:slug'
-            templateUrl: 'partials/user.html'
+            templateUrl: 'static/partials/user.html'
             controller: UserInstCtrl            
         .otherwise redirectTo: '/scores'
     ]

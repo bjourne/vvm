@@ -1,4 +1,6 @@
-log = (args...) -> console.log 'controllers', args...
+logger = new Logger('controllers')
+
+    #log = (args...) -> console.log 'controllers', args...
 
 ERROR_TEMPLATE = kendo.template '''
     <div class="k-widget k-tooltip k-tooltip-validation k-invalid-msg field-validation-error"
@@ -120,7 +122,7 @@ handleGridError = (err) ->
     
     if not el.length
         msg = 'No element found for field: ' + field
-        log 'handleGridError', msg
+        logger.log 'handleGridError', msg
         alert msg
         return
     $('.field-validation-error').remove()
@@ -128,6 +130,7 @@ handleGridError = (err) ->
 
 ScoreListCtrl = ($scope, User, Urls) ->
     $scope.$on 'userInfoChanged', (e, arg) ->
+        logger.log 'userInfoChanged', e
         refreshGrid $scope.gridId
     $scope.users = new kendo.data.DataSource
         type: 'json'
@@ -222,20 +225,9 @@ ScoreListCtrl = ($scope, User, Urls) ->
             createScoreColumn('Kvalificeringen', 'qual_score', 'qual_questions'),
             createScoreColumn('Utslagningen', 'elim_score', 'elim_questions'),
             createScoreColumn('Finalen', 'final_score', 'final_questions'),
-            {
-                command: [
-                    {
-                        name: 'edit',
-                        text:
-                            edit: 'Ändra'
-                            update: 'Spara'
-                            cancel: 'Avbryt'
-                    },
-                    {name: 'destroy', text: 'Ta bort'}
-                ],
-                title: '&nbsp;'
-            }
+            kendoSwedishCrudColumn()
         ]
 
-UserInstCtrl = ($scope) ->
+UserInstCtrl = ($scope, $routeParams) ->
+    logger.log $routeParams
     null

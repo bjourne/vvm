@@ -1,6 +1,6 @@
 from app import app, db
 from app.users.models import User
-from app.utils import slugify
+from app.utils import slugify_unique
 from flask import (
     Blueprint,
     abort,
@@ -81,11 +81,12 @@ def setup_user(oauth_provider, oauth_id, display_name, image_url):
         oauth_id = unicode(oauth_id),
         oauth_provider = oauth_provider
         )
+    slugs = set(u.display_slug for u in User.query.all())
     user = User.query.filter_by(**key).first()
     if not user:
         user = User(**key)
         db.session.add(user)
-    user.display_slug = slugify(display_name)
+    user.display_slug = slugify_unique(display_name, slugs)
     user.display_name = display_name
     user.oauth_token, user.oauth_secret = session['oauth']
 

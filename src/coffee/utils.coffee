@@ -1,3 +1,7 @@
+ngGetElementScope = (expr) ->
+    el = $(expr)[0]
+    angular.element(el).scope()
+    
 dateToUTC = (date) ->
     new Date Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
 
@@ -9,6 +13,11 @@ mutateMatchingAttrs = (obj, matchFun, applyFun) ->
         if matchFun v
             console.log 'applying'
             obj[k] = applyFun v
+
+class Logger
+    constructor: (@name) ->
+    log: (args...) ->
+        console.log @name, args...                    
 
 
 

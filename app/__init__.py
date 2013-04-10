@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, send_file, send_from_directory, url_for
 from flask.ext.sqlalchemy import SQLAlchemy
 from logging import INFO, basicConfig, getLogger
 
@@ -19,7 +19,7 @@ setup_api(app, db)
 
 @app.route('/')
 def root():
-    return redirect(url_for('static', filename = 'index.html'))
+    return send_file('static/index.html', mimetype = 'text/html')
 
 # @app.before_first_request
 # def setup_db():

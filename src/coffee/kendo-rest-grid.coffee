@@ -36,6 +36,18 @@ kendoSwedishPagination = ->
     next: 'Nästa sida'
     first: 'Första sidan'
     last: 'Sista sidan'
-    
-    
 
+kendoSwedishCrudEdit = ->
+    name: 'edit'
+    text:
+        edit: 'Ändra'
+        update: 'Spara'
+        cancel: 'Avbryt'
+
+kendoSwedishCrudDelete = ->
+    name: 'destroy'
+    text: 'Ta bort'        
+
+kendoSwedishCrudColumn = ->
+    command: [kendoSwedishCrudEdit(), kendoSwedishCrudDelete()]
+    title: '&nbsp'        
