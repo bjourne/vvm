@@ -2,10 +2,6 @@
 # datasources.
 #
 # Nice recursive spaghetti code for handling asyncronous js. :)
-
-# I like this kind of metaprogramming. :)
-log = (args...) -> console.log 'directives', args...
-
 processArraySerially = (arr, procFun, cb) ->
     if arr.length == 0
         cb()
@@ -39,7 +35,7 @@ preloadColumns = (columns, cb) ->
     processArraySerially columns, preloadColumn, cb
 
 preloadForeignKeys = (config, cb = -> null) ->
-    log 'preloadForeignKeys', config
+    console.log 'preloadForeignKeys', config
     columns = _.filter config.columns, 'dsForeignKey'
     preloadColumns columns, ->
         config.save = (e) ->
@@ -51,9 +47,10 @@ preloadForeignKeys = (config, cb = -> null) ->
         cb()
 
 refreshGrid = (gridId) ->
-    log 'refreshGrid'
+    console.log 'refreshGrid', gridId
     grid = $('#' + gridId).data('kendoGrid')
     preloadForeignKeys grid, ->
+        console.log 'grid.dataSource', grid.dataSource
         grid.dataSource.read()
 
 mod = angular.module 'vvm.directives', []

@@ -6,7 +6,7 @@ $coffeeFiles=@(
     "kendo-rest-grid",
     "services"
 )
-$coffeeFiles = $coffeeFIles | % {"src/coffee/$_.coffee"}
+$coffeeFiles = $coffeeFiles | % {"src/coffee/$_.coffee"}
 
 $builddir="app/static"
 jade -P src/index.jade -O $builddir

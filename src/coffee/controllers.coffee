@@ -1,7 +1,3 @@
-logger = new Logger('controllers')
-
-    #log = (args...) -> console.log 'controllers', args...
-
 ERROR_TEMPLATE = kendo.template '''
     <div class="k-widget k-tooltip k-tooltip-validation k-invalid-msg field-validation-error"
     style="margin: 0.5em; display: block;" >
@@ -122,7 +118,7 @@ handleGridError = (err) ->
     
     if not el.length
         msg = 'No element found for field: ' + field
-        logger.log 'handleGridError', msg
+        console.log 'handleGridError', msg
         alert msg
         return
     $('.field-validation-error').remove()
@@ -130,11 +126,11 @@ handleGridError = (err) ->
 
 ScoreListCtrl = ($scope, User, Urls) ->
     $scope.$on 'userInfoChanged', (e, arg) ->
-        logger.log 'userInfoChanged', e
+        console.log 'userInfoChanged', e
         refreshGrid $scope.gridId
     $scope.users = new kendo.data.DataSource
         type: 'json'
-        transport: kendoRestlessTransport '/api/user'
+        transport: kendoRestlessTransport Urls.listUsers
         schema:
             data: (resp) -> resp.objects
             total: (resp) -> resp.num_results
@@ -155,7 +151,7 @@ ScoreListCtrl = ($scope, User, Urls) ->
             error: handleGridError
             # My extension
             errorContainer: $scope.gridId
-            transport: kendoRestlessTransport '/api/score'
+            transport: kendoRestlessTransport Urls.listScores
             schema:
                 data: (resp) -> resp.objects
                 total: (resp) -> resp.num_results
@@ -228,6 +224,81 @@ ScoreListCtrl = ($scope, User, Urls) ->
             kendoSwedishCrudColumn()
         ]
 
-UserInstCtrl = ($scope, $routeParams) ->
-    logger.log $routeParams
-    null
+kendoFilterEq = (field, value) ->
+    params = 
+        filters: [
+            name: field
+            op: "eq"
+            val: value
+        ]
+    'q=' + (kendo.stringify params)        
+            
+
+UserInstCtrl = ($scope, $http, $routeParams, Urls) ->
+    q = (kendoFilterEq "display_slug", $routeParams.slug)
+    url = Urls.listUsers + '?' + q  
+    $http.get(url).success (data) ->
+        user = data.objects[0]
+        $scope.user = user
+        grid = $('#' + $scope.gridId).data('kendoGrid')
+        #grid.dataSource.transport = kendoRestlessTransport Urls.listScores
+        grid.dataSource.transport.read = ->
+            'tjaba'
+        refreshGrid $scope.gridId
+        # filterDef =
+        #     field: 'user_id'
+        #     operator: 'eq'
+        #     value: 33
+        # console.log grid.dataSource
+        # grid.dataSource.filter filterDef
+        # # q = kendoFilterEq "user_id", user.id
+        # # scoreUrl = Urls.listScores + '?' + q
+        # $scope.config.dataSource.transport = kendoRestlessTransport scoreUrl
+        # refreshGrid $scope.gridId
+        #console.log scoreUrl
+        #console.log $scope.config.dataSource
+
+    $scope.gridId = 'theGrid'
+    $scope.config =
+        dataSource:
+            allowUnsort: false
+            serverPaging: true
+            serverSorting: true
+            serverFiltering: true
+            sort:
+                field: 'program_date'
+                dir: 'desc'
+            pageSize: 10
+            type: 'json'
+            batch: false
+            transport: kendoRestlessTransport Urls.listScores
+            schema:
+                data: (resp) -> resp.objects
+                total: (resp) -> resp.num_results
+                model:
+                    id: 'id'
+                    fields:
+                        id:
+                            type: 'number'
+                            editable: false
+                            nullable: true
+                        program_date: {type: 'date'}
+                        user_id: {type: 'number'}
+                        qual_score: scoreField()
+                        qual_questions: scoreField()
+                        elim_score: scoreField()
+                        elim_questions: scoreField()
+                        final_score: scoreField()
+                        final_questions: scoreField()
+            
+        columns: [
+            {field: 'program_date', title: 'Programmets datum', format: '{0:yyyy-MM-dd}'},
+            createScoreColumn('Kvalificeringen', 'qual_score', 'qual_questions'),
+            createScoreColumn('Utslagningen', 'elim_score', 'elim_questions'),
+            createScoreColumn('Finalen', 'final_score', 'final_questions')
+        ]
+        scrollable: false
+        sortable:
+            allowUnsort: false
+            
+        

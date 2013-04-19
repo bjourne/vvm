@@ -20,11 +20,11 @@ kendoRestlessTransport = (baseUrl) ->
         dataType: 'json'
         type: 'delete'
     parameterMap: (data, op) ->
-        console.log data
         if op != 'read'
             mutateMatchingAttrs data, ((v) -> v instanceof Date), dateToUTC
             return kendo.stringify data
         else
+            console.log op, data
             q = kendoGridStateToRestless data
             q = kendo.stringify q
             q = encodeURIComponent q

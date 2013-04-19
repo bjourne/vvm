@@ -11,7 +11,6 @@ objToHtmlAttrs = (obj) ->
 mutateMatchingAttrs = (obj, matchFun, applyFun) ->
     for [k, v] in _.pairs obj
         if matchFun v
-            console.log 'applying'
             obj[k] = applyFun v
 
 class Logger

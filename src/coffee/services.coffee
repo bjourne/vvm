@@ -1,13 +1,15 @@
 mod = angular.module('vvm.services', [])
 
 mod.factory 'Urls', ->
-    @urlPrefix = '/users'
+    @authPrefix = '/users'
+    listUsers: '/api/user'
+    listScores: '/api/score'
     showImage: (userId) =>
-        @urlPrefix + '/show_image/' + userId + '.jpg'
-    whoAmI: @urlPrefix + '/whoami'
-    logOut: @urlPrefix + '/logout'
+        @authPrefix + '/show_image/' + userId + '.jpg'
+    whoAmI: @authPrefix + '/whoami'
+    logOut: @authPrefix + '/logout'
     logIn: (provider) =>
-        @urlPrefix + '/auth/' + provider + '/login'
+        @authPrefix + '/auth/' + provider + '/login'
 
 # http://vyazici.blogspot.se/2012/09/angularjs-authentication-service.html
 anonUser = ->
