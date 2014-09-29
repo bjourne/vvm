@@ -115,7 +115,7 @@ def create_oauth_authorized_handler(provider, func):
             oauth = resp['access_token'], 'empty'
         session['oauth'] = oauth
         remote_app = remote_apps[provider]
-        #id, name, image_url = 
+        #id, name, image_url =
         return setup_user(provider, *func(remote_app, resp))
     return wrapper
 
@@ -133,8 +133,9 @@ oauth_configs = dict(
         authorize_url = 'https://github.com/login/oauth/authorize',
         request_token_params = {'scope' : 'user:email'}
         ),
+    # Needs an update to the 1.1 api
     twitter = dict(
-        base_url = 'https://api.twitter.com/1/',
+        base_url = 'https://api.twitter.com/1.1/',
         request_token_url = 'https://api.twitter.com/oauth/request_token',
         access_token_url = 'https://api.twitter.com/oauth/access_token',
         authorize_url = 'https://api.twitter.com/oauth/authenticate'
@@ -207,13 +208,14 @@ def twitter_user_info(remote_app, resp):
     name = resp['screen_name']
     id = resp['user_id']
     data = remote_app.get('users/show.json?user_id=' + id).data
+    print 'data', data
     return id, name, data['profile_image_url']
 
 # This isn't very nice.
 remote_apps = {}
 
 def setup_oauth(app):
-    global remote_apps    
+    global remote_apps
     oauth_logins = app.config['OAUTH_LOGINS']
     for provider, config in oauth_configs.items():
         config.update(oauth_logins[provider])
@@ -230,4 +232,3 @@ def setup_oauth(app):
         handler = remote_app.authorized_handler(handler)
         mod.add_url_rule('/auth/' + provider + '/authorized', view_func = handler)
         remote_apps[provider] = remote_app
-
